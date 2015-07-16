@@ -17,11 +17,6 @@ public class PostHangeulApp implements KeyListener {
   public PostHangeulApp() {
     mainWindow = new JFrame("Post Hangeul");
 
-    mainWindow.setBounds(0, 0, 600, 480);
-    mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    mainWindow.setLocationRelativeTo(null);
-    mainWindow.setVisible(true);
-
     panel = new JPanel() {
       @Override
       public void paint(Graphics g) {
@@ -37,8 +32,13 @@ public class PostHangeulApp implements KeyListener {
     mainWindow.getContentPane().add(panel);
     mainWindow.addKeyListener(this);
 
-    menuBar = new MainMenu();
+    menuBar = new MainMenu(mainWindow);
     mainWindow.setJMenuBar(menuBar);
+
+    mainWindow.setBounds(0, 0, 600, 480);
+    mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    mainWindow.setLocationRelativeTo(null);
+    mainWindow.setVisible(true);
   }
 
   public static void main(String[] args) {
