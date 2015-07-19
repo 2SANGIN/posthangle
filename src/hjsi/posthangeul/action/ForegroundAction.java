@@ -1,4 +1,5 @@
-package hjsi.posthangeul.window;
+package hjsi.posthangeul.action;
+
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -8,7 +9,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
@@ -20,58 +20,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
 
-class BoldAction extends StyledEditorKit.StyledTextAction {
-  private static final long serialVersionUID = 9174670038684056758L;
-
-  public BoldAction() {
-    super("font-bold");
-  }
-
-  public String toString() {
-    return "Bold";
-  }
-
-  public void actionPerformed(ActionEvent e) {
-    JEditorPane editor = getEditor(e);
-    if (editor != null) {
-      StyledEditorKit kit = getStyledEditorKit(editor);
-      MutableAttributeSet attr = kit.getInputAttributes();
-      boolean bold = (StyleConstants.isBold(attr)) ? false : true;
-      SimpleAttributeSet sas = new SimpleAttributeSet();
-      StyleConstants.setBold(sas, bold);
-      setCharacterAttributes(editor, sas, false);
-
-    }
-  }
-}
-
-
-class ItalicAction extends StyledEditorKit.StyledTextAction {
-  private static final long serialVersionUID = -1428340091100055456L;
-
-  public ItalicAction() {
-    super("font-italic");
-  }
-
-  public String toString() {
-    return "Italic";
-  }
-
-  public void actionPerformed(ActionEvent e) {
-    JEditorPane editor = getEditor(e);
-    if (editor != null) {
-      StyledEditorKit kit = getStyledEditorKit(editor);
-      MutableAttributeSet attr = kit.getInputAttributes();
-      boolean italic = (StyleConstants.isItalic(attr)) ? false : true;
-      SimpleAttributeSet sas = new SimpleAttributeSet();
-      StyleConstants.setItalic(sas, italic);
-      setCharacterAttributes(editor, sas, false);
-    }
-  }
-}
-
-
-class ForegroundAction extends StyledEditorKit.StyledTextAction {
+public class ForegroundAction extends StyledEditorKit.StyledTextAction {
 
   private static final long serialVersionUID = 6384632651737400352L;
 
@@ -160,40 +109,3 @@ class ForegroundAction extends StyledEditorKit.StyledTextAction {
 
   private Color fg;
 }
-
-
-class FontAction extends StyledEditorKit.StyledTextAction {
-
-  private static final long serialVersionUID = 584531387732416339L;
-
-  private String family;
-
-  public FontAction() {
-    super("Font");
-
-  }
-
-  public String toString() {
-    return "Font";
-  }
-
-  public void actionPerformed(ActionEvent e) {
-    JTextPane editor = (JTextPane) getEditor(e);
-    int p0 = editor.getSelectionStart();
-    StyledDocument doc = getStyledDocument(editor);
-    Element paragraph = doc.getCharacterElement(p0);
-    AttributeSet as = paragraph.getAttributes();
-
-    family = (String) editor.getSelectedText();
-
-    MutableAttributeSet attr = null;
-    if (editor != null) {
-      StyledEditorKit kit = getStyledEditorKit(editor);
-      attr = kit.getInputAttributes();
-      StyleConstants.setFontFamily(attr, family);
-      setCharacterAttributes(editor, attr, false);
-    }
-  }
-}
-
-
