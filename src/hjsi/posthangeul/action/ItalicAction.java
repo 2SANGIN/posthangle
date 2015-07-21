@@ -31,5 +31,6 @@ public class ItalicAction extends StyledEditorKit.StyledTextAction {
       StyleConstants.setItalic(sas, italic);
       setCharacterAttributes(editor, sas, false);
     }
+    editor.requestFocus();
   }
 }

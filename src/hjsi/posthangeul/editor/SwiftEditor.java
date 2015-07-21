@@ -15,6 +15,15 @@ public class SwiftEditor extends JPanel {
     scrollPane = new JScrollPane(textPane);
     setLayout(new BorderLayout());
     add(scrollPane);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.swing.JComponent#requestFocus()
+   */
+  @Override
+  public void requestFocus() {
     textPane.requestFocus();
   }
 }

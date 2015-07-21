@@ -30,7 +30,7 @@ public class BoldAction extends StyledEditorKit.StyledTextAction {
       SimpleAttributeSet sas = new SimpleAttributeSet();
       StyleConstants.setBold(sas, bold);
       setCharacterAttributes(editor, sas, false);
-
     }
+    editor.requestFocus();
   }
 }
