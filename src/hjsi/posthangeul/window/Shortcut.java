@@ -1,21 +1,35 @@
 package hjsi.posthangeul.window;
 
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JToolBar;
 
 import hjsi.posthangeul.action.BoldAction;
 import hjsi.posthangeul.action.FontAction;
 import hjsi.posthangeul.action.ForegroundAction;
 import hjsi.posthangeul.action.ItalicAction;
+import hjsi.posthangeul.action.OpenAction;
+import hjsi.posthangeul.action.SaveAction;
 
 public class Shortcut extends JPanel {
+  private static final long serialVersionUID = -5056855136164482441L;
+
   JButton bold = new JButton();
   JButton italic = new JButton();
   JButton color = new JButton();
@@ -25,7 +39,57 @@ public class Shortcut extends JPanel {
   JButton sizeUp = new JButton();
   JButton sizeDown = new JButton();
 
-  public Shortcut(PostHangeulApp owner) {
+  JButton fileOpen = new JButton();
+  JButton fileSave = new JButton();
+  JButton fileSaveAs = new JButton();
+
+  public Shortcut(PostHangeulApp app) {
+    setLayout(new BorderLayout());
+
+    JPanel topNavi = new JPanel();
+    topNavi.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+    JToolBar toolbar = new JToolBar();
+
+    add(topNavi, BorderLayout.NORTH);
+    add(toolbar, BorderLayout.CENTER);
+
+    Image image = null;
+    File fpPath = new File("resources");
+    File fpImage = new File(fpPath, "file-open.png");
+
+    try {
+      image = ImageIO.read(fpImage).getScaledInstance(32, 32, Image.SCALE_AREA_AVERAGING);
+      fileOpen.setIcon(new ImageIcon(image));
+
+      image = ImageIO.read(new File(fpPath, "file-save.png")).getScaledInstance(32, 32,
+          Image.SCALE_AREA_AVERAGING);
+      fileSave.setIcon(new ImageIcon(image));
+
+      image = ImageIO.read(new File(fpPath, "file-save-as.png")).getScaledInstance(32, 32,
+          Image.SCALE_AREA_AVERAGING);
+      fileSaveAs.setIcon(new ImageIcon(image));
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
+
+    /* file processing buttons */
+    fileOpen.setOpaque(false);
+    fileOpen.setContentAreaFilled(false);
+    fileOpen.setMargin(new Insets(0, 0, 0, 0));
+    fileOpen.addActionListener(new OpenAction(app));
+
+    fileSave.setOpaque(false);
+    fileSave.setContentAreaFilled(false);
+    fileSave.setMargin(new Insets(0, 0, 0, 0));
+    fileSave.addActionListener(new SaveAction(app, false));
+
+    fileSaveAs.setOpaque(false);
+    fileSaveAs.setContentAreaFilled(false);
+    fileSaveAs.setMargin(new Insets(0, 0, 0, 0));
+    fileSaveAs.addActionListener(new SaveAction(app, true));
+    /* end of file processing buttons */
+
     bold.setText("B");
     bold.setOpaque(false);
     bold.setContentAreaFilled(false);
@@ -57,7 +121,7 @@ public class Shortcut extends JPanel {
     btnKeyCode.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        owner.keyCodeViewer.setVisible(true);
+        app.keyCodeViewer.setVisible(true);
       }
     });
 
@@ -69,11 +133,37 @@ public class Shortcut extends JPanel {
     font.getSelectedItem();
     font.addActionListener(formatTextAction);
 
-    add(bold);
-    add(italic);
-    add(color);
-    add(font);
-    add(btnKeyCode);
-    setLayout(new FlowLayout(FlowLayout.LEFT));
+    // topNavi.add(fileOpen);
+    // topNavi.add(fileSave);
+    // topNavi.add(fileSaveAs);
+    // topNavi.add(bold);
+    // topNavi.add(italic);
+    topNavi.add(color);
+    topNavi.add(font);
+    topNavi.add(btnKeyCode);
+
+    toolbar.add(fileOpen);
+    toolbar.add(fileSave);
+    toolbar.add(fileSaveAs);
+    toolbar.addSeparator();
+    toolbar.add(bold);
+    toolbar.add(italic);
   }
+}
+
+
+class VerticalBar extends JComponent {
+  private static final long serialVersionUID = 7438238662160423918L;
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.swing.JComponent#paint(java.awt.Graphics)
+   */
+  @Override
+  public void paint(Graphics g) {
+    super.paint(g);
+    g.drawRect(0, 0, 2, 30);
+  }
+
 }

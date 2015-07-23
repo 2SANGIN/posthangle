@@ -7,6 +7,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 public class SwiftEditor extends JPanel {
+  private static final long serialVersionUID = 8037738001573590413L;
   JTextPane textPane;
   JScrollPane scrollPane;
 

@@ -2,10 +2,9 @@ package hjsi.posthangeul.window;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.File;
 
 import javax.swing.JFrame;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import hjsi.posthangeul.editor.SwiftEditor;
 
@@ -17,8 +16,11 @@ public class PostHangeulApp {
 
   SwiftEditor editor;
 
+  File currentFile = new File("제목 없음.txt");
+
   public PostHangeulApp() {
-    mainWindow = new JFrame("Post Hangeul");
+    mainWindow = new JFrame();
+    mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
 
     // menuBar = new MainMenu(mainWindow);
     // mainWindow.setJMenuBar(menuBar);
@@ -43,11 +45,26 @@ public class PostHangeulApp {
   }
 
   public static void main(String[] args) {
-    try {
-      UIManager.setLookAndFeel(new com.sun.java.swing.plaf.windows.WindowsLookAndFeel());
-    } catch (UnsupportedLookAndFeelException e) {
-      e.printStackTrace();
-    }
+    // try {
+    // UIManager.setLookAndFeel(new com.sun.java.swing.plaf.windows.WindowsLookAndFeel());
+    // } catch (UnsupportedLookAndFeelException e) {
+    // e.printStackTrace();
+    // }
     new PostHangeulApp();
+  }
+
+  /**
+   * @return the currentFile
+   */
+  public File getCurrentFile() {
+    return this.currentFile;
+  }
+
+  /**
+   * @param currentFile the currentFile to set
+   */
+  public void setCurrentFile(File currentDocument) {
+    this.currentFile = currentDocument;
+    mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
   }
 }
