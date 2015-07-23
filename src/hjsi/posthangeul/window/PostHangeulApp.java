@@ -10,7 +10,6 @@ import hjsi.posthangeul.editor.SwiftEditor;
 
 public class PostHangeulApp {
   JFrame mainWindow;
-  MainMenu menuBar;
   KeyCodeViewer keyCodeViewer;
   Shortcut shortcuts;
 
@@ -21,9 +20,6 @@ public class PostHangeulApp {
   public PostHangeulApp() {
     mainWindow = new JFrame();
     mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
-
-    // menuBar = new MainMenu(mainWindow);
-    // mainWindow.setJMenuBar(menuBar);
 
     /* create menu */
     shortcuts = new Shortcut(this);
