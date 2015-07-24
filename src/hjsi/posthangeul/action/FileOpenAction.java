@@ -14,13 +14,13 @@ import javax.swing.text.StyledEditorKit.StyledTextAction;
 import hjsi.posthangeul.window.PostHangeulApp;
 
 
-public class OpenAction extends StyledTextAction {
+public class FileOpenAction extends StyledTextAction {
   private static final long serialVersionUID = 4769790497914601143L;
 
   PostHangeulApp app;
   JFileChooser fileChooser;
 
-  public OpenAction(PostHangeulApp app) {
+  public FileOpenAction(PostHangeulApp app) {
     super("file-open");
     this.app = app;
 

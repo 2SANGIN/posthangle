@@ -20,12 +20,13 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
+import hjsi.posthangeul.FileNewAction;
 import hjsi.posthangeul.action.BoldAction;
+import hjsi.posthangeul.action.FileOpenAction;
+import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.action.FontAction;
 import hjsi.posthangeul.action.ForegroundAction;
 import hjsi.posthangeul.action.ItalicAction;
-import hjsi.posthangeul.action.OpenAction;
-import hjsi.posthangeul.action.SaveAction;
 
 public class Shortcut extends JPanel {
   private static final long serialVersionUID = -5056855136164482441L;
@@ -39,6 +40,7 @@ public class Shortcut extends JPanel {
   JButton sizeUp = new JButton();
   JButton sizeDown = new JButton();
 
+  JButton fileNew = new JButton();
   JButton fileOpen = new JButton();
   JButton fileSave = new JButton();
   JButton fileSaveAs = new JButton();
@@ -56,10 +58,14 @@ public class Shortcut extends JPanel {
 
     Image image = null;
     File fpPath = new File("resources");
-    File fpImage = new File(fpPath, "file-open.png");
 
     try {
-      image = ImageIO.read(fpImage).getScaledInstance(32, 32, Image.SCALE_AREA_AVERAGING);
+      image = ImageIO.read(new File(fpPath, "file-new.png")).getScaledInstance(32, 32,
+          Image.SCALE_AREA_AVERAGING);
+      fileNew.setIcon(new ImageIcon(image));
+
+      image = ImageIO.read(new File(fpPath, "file-open.png")).getScaledInstance(32, 32,
+          Image.SCALE_AREA_AVERAGING);
       fileOpen.setIcon(new ImageIcon(image));
 
       image = ImageIO.read(new File(fpPath, "file-save.png")).getScaledInstance(32, 32,
@@ -74,20 +80,25 @@ public class Shortcut extends JPanel {
     }
 
     /* file processing buttons */
+    fileNew.setOpaque(false);
+    fileNew.setContentAreaFilled(false);
+    fileNew.setMargin(new Insets(0, 0, 0, 0));
+    fileNew.addActionListener(new FileNewAction(app));
+
     fileOpen.setOpaque(false);
     fileOpen.setContentAreaFilled(false);
     fileOpen.setMargin(new Insets(0, 0, 0, 0));
-    fileOpen.addActionListener(new OpenAction(app));
+    fileOpen.addActionListener(new FileOpenAction(app));
 
     fileSave.setOpaque(false);
     fileSave.setContentAreaFilled(false);
     fileSave.setMargin(new Insets(0, 0, 0, 0));
-    fileSave.addActionListener(new SaveAction(app, false));
+    fileSave.addActionListener(new FileSaveAction(app, false));
 
     fileSaveAs.setOpaque(false);
     fileSaveAs.setContentAreaFilled(false);
     fileSaveAs.setMargin(new Insets(0, 0, 0, 0));
-    fileSaveAs.addActionListener(new SaveAction(app, true));
+    fileSaveAs.addActionListener(new FileSaveAction(app, true));
     /* end of file processing buttons */
 
     bold.setText("B");
@@ -142,6 +153,7 @@ public class Shortcut extends JPanel {
     topNavi.add(font);
     topNavi.add(btnKeyCode);
 
+    toolbar.add(fileNew);
     toolbar.add(fileOpen);
     toolbar.add(fileSave);
     toolbar.add(fileSaveAs);

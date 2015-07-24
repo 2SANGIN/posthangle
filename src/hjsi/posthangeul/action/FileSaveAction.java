@@ -12,14 +12,14 @@ import javax.swing.text.StyledEditorKit;
 
 import hjsi.posthangeul.window.PostHangeulApp;
 
-public class SaveAction extends StyledEditorKit.StyledTextAction {
+public class FileSaveAction extends StyledEditorKit.StyledTextAction {
   private static final long serialVersionUID = 1278931309505020017L;
 
   PostHangeulApp app;
   boolean isSaveAs = false;
   JFileChooser fileChooser;
 
-  public SaveAction(PostHangeulApp app, boolean isSaveAs) {
+  public FileSaveAction(PostHangeulApp app, boolean isSaveAs) {
     super("file-save");
     this.app = app;
     this.isSaveAs = isSaveAs;
