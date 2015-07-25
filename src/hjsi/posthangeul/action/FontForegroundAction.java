@@ -16,15 +16,14 @@ import javax.swing.text.StyledEditorKit;
 
 import hjsi.posthangeul.window.ColorPicker;
 
-public class ForegroundAction extends StyledEditorKit.StyledTextAction {
+public class FontForegroundAction extends StyledEditorKit.StyledTextAction {
 
   private static final long serialVersionUID = 6384632651737400352L;
   ColorPicker picker;
   private Color fg;
 
-
-  public ForegroundAction() {
-    super("foreground");
+  public FontForegroundAction() {
+    super("font-foreground");
   }
 
   public void actionPerformed(ActionEvent e) {

@@ -8,16 +8,11 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledEditorKit;
 
-public class BoldAction extends StyledEditorKit.StyledTextAction {
+public class FontBoldAction extends StyledEditorKit.StyledTextAction {
   private static final long serialVersionUID = 9174670038684056758L;
 
-  public BoldAction() {
+  public FontBoldAction() {
     super("font-bold");
-  }
-
-  @Override
-  public String toString() {
-    return "Bold";
   }
 
   @Override

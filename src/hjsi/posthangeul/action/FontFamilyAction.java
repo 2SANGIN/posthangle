@@ -11,16 +11,12 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
 
-public class FontAction extends StyledEditorKit.StyledTextAction {
+public class FontFamilyAction extends StyledEditorKit.StyledTextAction {
   private static final long serialVersionUID = 584531387732416339L;
   private String family;
 
-  public FontAction() {
-    super("Font");
-  }
-
-  public String toString() {
-    return "Font";
+  public FontFamilyAction() {
+    super("font-family");
   }
 
   public void actionPerformed(ActionEvent e) {
