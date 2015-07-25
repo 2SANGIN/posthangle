@@ -1,4 +1,4 @@
-package hjsi.posthangeul;
+package hjsi.posthangeul.action;
 
 import java.awt.event.ActionEvent;
 import java.io.File;

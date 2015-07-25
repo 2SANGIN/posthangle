@@ -20,16 +20,18 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
-import hjsi.posthangeul.FileNewAction;
 import hjsi.posthangeul.action.BoldAction;
+import hjsi.posthangeul.action.FileNewAction;
 import hjsi.posthangeul.action.FileOpenAction;
 import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.action.FontAction;
+import hjsi.posthangeul.action.FontSizeAction;
 import hjsi.posthangeul.action.ForegroundAction;
 import hjsi.posthangeul.action.ItalicAction;
 
 public class Shortcut extends JPanel {
   private static final long serialVersionUID = -5056855136164482441L;
+  private int buttonSize = 32;
 
   JButton bold = new JButton();
   JButton italic = new JButton();
@@ -37,15 +39,17 @@ public class Shortcut extends JPanel {
   JComboBox<String> font = new JComboBox<String>();
   JButton btnKeyCode = new JButton("KeyCode Viewer");
 
-  JButton sizeUp = new JButton();
-  JButton sizeDown = new JButton();
+  JButton fontSizeUp = new JButton();
+  JButton fontSizeDown = new JButton();
 
   JButton fileNew = new JButton();
   JButton fileOpen = new JButton();
   JButton fileSave = new JButton();
   JButton fileSaveAs = new JButton();
 
-  public Shortcut(PostHangeulApp app) {
+  public Shortcut(PostHangeulApp app, int btnSize) {
+    buttonSize = btnSize;
+
     setLayout(new BorderLayout());
 
     JPanel topNavi = new JPanel();
@@ -60,21 +64,29 @@ public class Shortcut extends JPanel {
     File fpPath = new File("resources");
 
     try {
-      image = ImageIO.read(new File(fpPath, "file-new.png")).getScaledInstance(32, 32,
-          Image.SCALE_AREA_AVERAGING);
+      image = ImageIO.read(new File(fpPath, "file-new.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
       fileNew.setIcon(new ImageIcon(image));
 
-      image = ImageIO.read(new File(fpPath, "file-open.png")).getScaledInstance(32, 32,
-          Image.SCALE_AREA_AVERAGING);
+      image = ImageIO.read(new File(fpPath, "file-open.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
       fileOpen.setIcon(new ImageIcon(image));
 
-      image = ImageIO.read(new File(fpPath, "file-save.png")).getScaledInstance(32, 32,
-          Image.SCALE_AREA_AVERAGING);
+      image = ImageIO.read(new File(fpPath, "file-save.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
       fileSave.setIcon(new ImageIcon(image));
 
-      image = ImageIO.read(new File(fpPath, "file-save-as.png")).getScaledInstance(32, 32,
-          Image.SCALE_AREA_AVERAGING);
+      image = ImageIO.read(new File(fpPath, "file-save-as.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
       fileSaveAs.setIcon(new ImageIcon(image));
+
+      image = ImageIO.read(new File(fpPath, "font-size-up.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
+      fontSizeUp.setIcon(new ImageIcon(image));
+
+      image = ImageIO.read(new File(fpPath, "font-size-down.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
+      fontSizeDown.setIcon(new ImageIcon(image));
     } catch (IOException e1) {
       e1.printStackTrace();
     }
@@ -100,6 +112,17 @@ public class Shortcut extends JPanel {
     fileSaveAs.setMargin(new Insets(0, 0, 0, 0));
     fileSaveAs.addActionListener(new FileSaveAction(app, true));
     /* end of file processing buttons */
+
+    /* font decoration buttons */
+    fontSizeUp.setOpaque(false);
+    fontSizeUp.setContentAreaFilled(false);
+    fontSizeUp.setMargin(new Insets(0, 0, 0, 0));
+    fontSizeUp.addActionListener(new FontSizeAction(true, new int[] {9, 12, 16, 22}));
+
+    fontSizeDown.setOpaque(false);
+    fontSizeDown.setContentAreaFilled(false);
+    fontSizeDown.setMargin(new Insets(0, 0, 0, 0));
+    fontSizeDown.addActionListener(new FontSizeAction(false, new int[] {9, 12, 16, 22}));
 
     bold.setText("B");
     bold.setOpaque(false);
@@ -128,7 +151,9 @@ public class Shortcut extends JPanel {
     Action formatTextAction = new FontAction();
     formatTextAction.putValue(Action.NAME, "Font");
     font.addActionListener(formatTextAction);
+    /* end of font decoration buttons */
 
+    /* etc buttons... */
     btnKeyCode.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -158,6 +183,8 @@ public class Shortcut extends JPanel {
     toolbar.add(fileSave);
     toolbar.add(fileSaveAs);
     toolbar.addSeparator();
+    toolbar.add(fontSizeUp);
+    toolbar.add(fontSizeDown);
     toolbar.add(bold);
     toolbar.add(italic);
   }

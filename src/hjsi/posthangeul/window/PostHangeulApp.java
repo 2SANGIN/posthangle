@@ -22,7 +22,7 @@ public class PostHangeulApp {
     mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
 
     /* create menu */
-    shortcuts = new Shortcut(this);
+    shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
 
     /* add editor */
