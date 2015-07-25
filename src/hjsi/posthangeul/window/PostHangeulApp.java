@@ -21,13 +21,14 @@ public class PostHangeulApp {
     mainWindow = new JFrame();
     mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
 
-    /* create menu */
-    shortcuts = new Shortcut(this, 24);
-    mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
-
     /* add editor */
     editor = new SwiftEditor();
     mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
+    editor.requestFocus();
+
+    /* create menu */
+    shortcuts = new Shortcut(this, 24);
+    mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
 
     /* create main window */
     mainWindow.setBounds(0, 0, 600, 480);
@@ -37,7 +38,6 @@ public class PostHangeulApp {
     mainWindow.setVisible(true);
 
     keyCodeViewer = new KeyCodeViewer(mainWindow, "KeyCode Viewer", false);
-    editor.requestFocus();
   }
 
   public static void main(String[] args) {

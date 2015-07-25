@@ -2,6 +2,7 @@ package hjsi.posthangeul.window;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -201,6 +202,10 @@ public class Shortcut extends JPanel {
     /* end of font foreground & background color buttons */
 
     /* font family combobox */
+    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+    for (String fontName : ge.getAvailableFontFamilyNames())
+      comboFontFamily.addItem(fontName);
+    comboFontFamily.setPreferredSize(new Dimension(80, 24));
     comboFontFamily.addActionListener(new FontFamilyAction());
 
     /* etc buttons... */
@@ -212,14 +217,6 @@ public class Shortcut extends JPanel {
         app.keyCodeViewer.setVisible(true);
       }
     });
-
-    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-    String[] fontNames = ge.getAvailableFontFamilyNames();
-    for (int i = 0; i < fontNames.length; i++) {
-      comboFontFamily.addItem(fontNames[i]);
-    }
-    comboFontFamily.getSelectedItem();
-    comboFontFamily.addActionListener(new FontFamilyAction());
 
     // topNavi.add(btnFileOpen);
     // topNavi.add(btnFileSave);
@@ -246,7 +243,7 @@ public class Shortcut extends JPanel {
     toolbar.add(btnHighlightBlue);
     toolbar.add(btnHighlightYellow);
     toolbar.addSeparator();
-    // toolbar.add(comboFontFamily);
+    toolbar.add(comboFontFamily);
     toolbar.add(btnKeyCode);
   }
 }
