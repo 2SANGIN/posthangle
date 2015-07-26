@@ -15,7 +15,11 @@ public class PostHangeulApp {
 
   SwiftEditor editor;
 
+  /* config of app instance */
   File currentFile = new File("제목 없음.txt");
+  String[] defaultFontFamilies = {"나눔바른고딕", "나눔고딕", "맑은 고딕", "새굴림", "굴림"};
+  int[] predefinedFontSizes = {9, 12, 16, 22};
+  int defaultFontSize = predefinedFontSizes[1];
 
   public PostHangeulApp() {
     mainWindow = new JFrame();
@@ -24,14 +28,13 @@ public class PostHangeulApp {
     /* add editor */
     editor = new SwiftEditor();
     mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
-    editor.requestFocus();
 
     /* create menu */
     shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
 
     /* create main window */
-    mainWindow.setBounds(0, 0, 600, 480);
+    mainWindow.setBounds(0, 0, 800, 480);
     mainWindow.setMinimumSize(new Dimension(600, 480));
     mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     mainWindow.setLocationRelativeTo(null);
@@ -41,12 +44,8 @@ public class PostHangeulApp {
   }
 
   public static void main(String[] args) {
-    // try {
-    // UIManager.setLookAndFeel(new com.sun.java.swing.plaf.windows.WindowsLookAndFeel());
-    // } catch (UnsupportedLookAndFeelException e) {
-    // e.printStackTrace();
-    // }
-    new PostHangeulApp();
+    PostHangeulApp app = new PostHangeulApp();
+    app.editor.requestFocus();
   }
 
   /**

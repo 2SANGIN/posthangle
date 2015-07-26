@@ -1,6 +1,7 @@
 package hjsi.posthangeul.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -26,5 +27,14 @@ public class SwiftEditor extends JPanel {
   @Override
   public void requestFocus() {
     textPane.requestFocus();
+  }
+
+  public String getFontFamily() {
+    return textPane.getFont().getFamily();
+  }
+
+  public void setFont(String fontFamily, int size) {
+    Font font = new Font(fontFamily, Font.PLAIN, size);
+    textPane.setFont(font);
   }
 }

@@ -10,7 +10,6 @@ import javax.swing.text.StyledEditorKit;
 
 public class FontFamilyAction extends StyledEditorKit.StyledTextAction {
   private static final long serialVersionUID = 584531387732416339L;
-  private String family;
 
   public FontFamilyAction() {
     super("font-family");

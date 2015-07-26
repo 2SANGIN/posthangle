@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -203,8 +204,25 @@ public class Shortcut extends JPanel {
 
     /* font family combobox */
     GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-    for (String fontName : ge.getAvailableFontFamilyNames())
-      comboFontFamily.addItem(fontName);
+    LinkedList<String> fontFamilies = new LinkedList<String>();
+    for (String fontFam : ge.getAvailableFontFamilyNames()) {
+      fontFam = fontFam.trim();
+      if (fontFam.startsWith("@") == false) {
+        fontFamilies.add(fontFam);
+        comboFontFamily.addItem(fontFam);
+      }
+    }
+    String toApplyToDefault = null;
+    for (String fontFam : app.defaultFontFamilies) {
+      if (fontFamilies.contains(fontFam)) {
+        toApplyToDefault = fontFam;
+        break;
+      }
+    }
+    if (toApplyToDefault != null) {
+      comboFontFamily.setSelectedItem(toApplyToDefault);
+      app.editor.setFont(toApplyToDefault, app.defaultFontSize);
+    }
     comboFontFamily.setPreferredSize(new Dimension(80, 24));
     comboFontFamily.addActionListener(new FontFamilyAction());
 
