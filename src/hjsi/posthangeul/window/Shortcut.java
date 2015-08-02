@@ -2,6 +2,7 @@ package hjsi.posthangeul.window;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
@@ -35,6 +36,9 @@ public class Shortcut extends JPanel {
   private static final long serialVersionUID = -5056855136164482441L;
   private int buttonSize = 32;
 
+  JPanel topNavi;
+  JToolBar toolbar;
+
   /* file processing buttons */
   JButton btnFileNew = new JButton();
   JButton btnFileOpen = new JButton();
@@ -62,10 +66,10 @@ public class Shortcut extends JPanel {
 
     setLayout(new BorderLayout());
 
-    JPanel topNavi = new JPanel();
+    topNavi = new JPanel();
     topNavi.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-    JToolBar toolbar = new JToolBar();
+    toolbar = new JToolBar();
 
     // add(topNavi, BorderLayout.NORTH);
     add(toolbar, BorderLayout.CENTER);
@@ -95,6 +99,16 @@ public class Shortcut extends JPanel {
           buttonSize, Image.SCALE_AREA_AVERAGING);
       btnFileSaveAs.setIcon(new ImageIcon(image));
 
+      // font size up
+      image = ImageIO.read(new File(fpPath, "font-size-up.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
+      btnFontSizeUp.setIcon(new ImageIcon(image));
+
+      // font size down
+      image = ImageIO.read(new File(fpPath, "font-size-down.png")).getScaledInstance(buttonSize,
+          buttonSize, Image.SCALE_AREA_AVERAGING);
+      btnFontSizeDown.setIcon(new ImageIcon(image));
+
       // font bold
       image = ImageIO.read(new File(fpPath, "font-bold.png")).getScaledInstance(buttonSize,
           buttonSize, Image.SCALE_AREA_AVERAGING);
@@ -109,16 +123,6 @@ public class Shortcut extends JPanel {
       image = ImageIO.read(new File(fpPath, "font-underline.png")).getScaledInstance(buttonSize,
           buttonSize, Image.SCALE_AREA_AVERAGING);
       btnFontUnderline.setIcon(new ImageIcon(image));
-
-      // font size up
-      image = ImageIO.read(new File(fpPath, "font-size-up.png")).getScaledInstance(buttonSize,
-          buttonSize, Image.SCALE_AREA_AVERAGING);
-      btnFontSizeUp.setIcon(new ImageIcon(image));
-
-      // font size down
-      image = ImageIO.read(new File(fpPath, "font-size-down.png")).getScaledInstance(buttonSize,
-          buttonSize, Image.SCALE_AREA_AVERAGING);
-      btnFontSizeDown.setIcon(new ImageIcon(image));
 
       // font highlight red
       image = ImageIO.read(new File(fpPath, "font-highlight-red.png")).getScaledInstance(buttonSize,
@@ -161,7 +165,7 @@ public class Shortcut extends JPanel {
     btnFileSaveAs.addActionListener(new FileSaveAction(app, true));
     /* end of file processing buttons */
 
-    /* font emphasis & decoration buttons */
+    /* font size buttons */
     btnFontSizeUp.setOpaque(false);
     btnFontSizeUp.setMargin(new Insets(0, 0, 0, 0));
     btnFontSizeUp.addActionListener(new FontSizeAction(true, new int[] {9, 12, 16, 22}));
@@ -169,7 +173,9 @@ public class Shortcut extends JPanel {
     btnFontSizeDown.setOpaque(false);
     btnFontSizeDown.setMargin(new Insets(0, 0, 0, 0));
     btnFontSizeDown.addActionListener(new FontSizeAction(false, new int[] {9, 12, 16, 22}));
+    /* end of font size buttons */
 
+    /* font emphasis buttons */
     btnFontBold.setOpaque(false);
     btnFontBold.setMargin(new Insets(0, 0, 0, 0));
     btnFontBold.addActionListener(new FontBoldAction());
@@ -181,9 +187,7 @@ public class Shortcut extends JPanel {
     btnFontUnderline.setOpaque(false);
     btnFontUnderline.setMargin(new Insets(0, 0, 0, 0));
     btnFontUnderline.addActionListener(new FontUnderlineAction());
-    /* end of font emphasis & decoration buttons */
 
-    /* font foreground & background color buttons */
     btnFontColor.setText("C");
     btnFontColor.setOpaque(false);
     btnFontColor.setMargin(new Insets(0, 0, 0, 0));
@@ -200,7 +204,7 @@ public class Shortcut extends JPanel {
     btnHighlightYellow.setOpaque(false);
     btnHighlightYellow.setMargin(new Insets(0, 0, 0, 0));
     btnHighlightYellow.addActionListener(new FontHighlightAction(Color.YELLOW));
-    /* end of font foreground & background color buttons */
+    /* end of font emphasis buttons */
 
     /* font family combobox */
     GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -225,6 +229,7 @@ public class Shortcut extends JPanel {
     }
     comboFontFamily.setPreferredSize(new Dimension(80, 24));
     comboFontFamily.addActionListener(new FontFamilyAction());
+    /* end of font family combobox */
 
     /* etc buttons... */
     btnKeyCode.setOpaque(false);
@@ -263,5 +268,10 @@ public class Shortcut extends JPanel {
     toolbar.addSeparator();
     toolbar.add(comboFontFamily);
     toolbar.add(btnKeyCode);
+  }
+
+  public Component add(Component comp) {
+    toolbar.add(comp);
+    return comp;
   }
 }
