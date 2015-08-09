@@ -25,13 +25,15 @@ public class PostHangeulApp {
     mainWindow = new JFrame();
     mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
 
-    /* add editor */
-    editor = new SwiftEditor();
-    mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
-
     /* create menu */
     shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
+
+    /* add editor */
+    editor = new SwiftEditor();
+    editor.setFont(shortcuts.getFontFamily(), defaultFontSize);
+    editor.addCaretListener(shortcuts);
+    mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
 
     /* create main window */
     mainWindow.setBounds(0, 0, 800, 480);

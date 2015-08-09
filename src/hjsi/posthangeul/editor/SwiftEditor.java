@@ -6,6 +6,7 @@ import java.awt.Font;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.event.CaretListener;
 
 public class SwiftEditor extends JPanel {
   private static final long serialVersionUID = 8037738001573590413L;
@@ -17,6 +18,10 @@ public class SwiftEditor extends JPanel {
     scrollPane = new JScrollPane(textPane);
     setLayout(new BorderLayout());
     add(scrollPane);
+  }
+
+  public void addCaretListener(CaretListener listener) {
+    textPane.addCaretListener(listener);
   }
 
   /*
