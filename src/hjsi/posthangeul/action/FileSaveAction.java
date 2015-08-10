@@ -1,14 +1,22 @@
 package hjsi.posthangeul.action;
 
 import java.awt.event.ActionEvent;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
+import javax.swing.text.rtf.RTFEditorKit;
 
 import hjsi.posthangeul.window.PostHangeulApp;
 
@@ -55,13 +63,24 @@ public class FileSaveAction extends StyledEditorKit.StyledTextAction {
 
     if (toSave != null) {
       try {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(toSave));
-        writer.write(editor.getText());
-        writer.close();
+    	  RTFEditorKit kit = new RTFEditorKit();
+    	  StyledDocument doc = (StyledDocument) editor.getDocument();
+    	  FileOutputStream out = new FileOutputStream(toSave);
+    	  kit.write(out, doc, 0, doc.getEndPosition().getOffset());
+//        BufferedWriter writer = new BufferedWriter(new FileWriter(toSave));
+//        writer.write(editor.getText());
+//        writer.close();
         app.setCurrentFile(toSave);
-      } catch (IOException e1) {
-        e1.printStackTrace();
-      }
+      } catch (FileNotFoundException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (IOException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (BadLocationException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
     }
 
     editor.requestFocus();

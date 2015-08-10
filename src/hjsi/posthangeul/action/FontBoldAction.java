@@ -26,6 +26,7 @@ public class FontBoldAction extends StyledEditorKit.StyledTextAction {
       StyleConstants.setBold(sas, bold);
       setCharacterAttributes(editor, sas, false);
     }
+
     editor.requestFocus();
   }
 }

@@ -65,6 +65,7 @@ public class Shortcut extends JPanel {
     topNavi.setLayout(new FlowLayout(FlowLayout.LEFT));
 
     JToolBar toolbar = new JToolBar();
+    toolbar.setFloatable(false);
 
     // add(topNavi, BorderLayout.NORTH);
     add(toolbar, BorderLayout.CENTER);

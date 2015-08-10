@@ -5,17 +5,15 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.swing.JFrame;
-
 import hjsi.posthangeul.editor.SwiftEditor;
 
 public class PostHangeulApp {
   JFrame mainWindow;
   KeyCodeViewer keyCodeViewer;
   Shortcut shortcuts;
-
   SwiftEditor editor;
 
-  File currentFile = new File("제목 없음.txt");
+  File currentFile = new File("제목 없음.rtf");
 
   public PostHangeulApp() {
     mainWindow = new JFrame();
@@ -25,10 +23,11 @@ public class PostHangeulApp {
     editor = new SwiftEditor();
     mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
     editor.requestFocus();
-
+    
     /* create menu */
     shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
+    
 
     /* create main window */
     mainWindow.setBounds(0, 0, 600, 480);
@@ -47,6 +46,7 @@ public class PostHangeulApp {
     // e.printStackTrace();
     // }
     new PostHangeulApp();
+    
   }
 
   /**
