@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.swing.JFrame;
+
 import hjsi.posthangeul.editor.SwiftEditor;
 
 public class PostHangeulApp {
@@ -26,7 +27,7 @@ public class PostHangeulApp {
     /* create menu */
     shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
-    
+
     /* add editor */
     editor = new SwiftEditor();
     editor.setFont(shortcuts.getFontFamily(), defaultFontSize);
@@ -46,7 +47,6 @@ public class PostHangeulApp {
   public static void main(String[] args) {
     PostHangeulApp app = new PostHangeulApp();
     app.editor.requestFocus();
-    
   }
 
   /**
