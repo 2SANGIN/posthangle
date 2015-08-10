@@ -10,12 +10,12 @@ import javax.swing.text.StyledEditorKit;
 
 public class FontFamilyAction extends StyledEditorKit.StyledTextAction {
   private static final long serialVersionUID = 584531387732416339L;
-  private String family;
 
   public FontFamilyAction() {
     super("font-family");
   }
 
+  @SuppressWarnings("unchecked")
   public void actionPerformed(ActionEvent e) {
     JTextPane editor = (JTextPane) getEditor(e);
 
@@ -32,20 +32,22 @@ public class FontFamilyAction extends StyledEditorKit.StyledTextAction {
      * StyleConstants.setFontFamily(attr, family); setCharacterAttributes(editor, attr, false); } }
      */
 
-    String family = (String) ((JComboBox<String>) e.getSource()).getSelectedItem();
-    SimpleAttributeSet sas = new SimpleAttributeSet();
-    StyleConstants.setFontFamily(sas, family);
+    if (e.getSource() instanceof JComboBox) {
+      String family = (String) ((JComboBox<String>) e.getSource()).getSelectedItem();
+      SimpleAttributeSet sas = new SimpleAttributeSet();
+      StyleConstants.setFontFamily(sas, family);
 
-    int beforeSelectionStart = editor.getSelectionStart();
-    int beforeSelectionEnd = editor.getSelectionEnd();
-    editor.setSelectionStart(0);
-    editor.setSelectionEnd(editor.getText().length());
+      int beforeSelectionStart = editor.getSelectionStart();
+      int beforeSelectionEnd = editor.getSelectionEnd();
+      editor.setSelectionStart(0);
+      editor.setSelectionEnd(editor.getText().length());
 
-    // apply font family
-    setCharacterAttributes(editor, sas, false);
+      // apply font family
+      setCharacterAttributes(editor, sas, false);
 
-    editor.setSelectionStart(beforeSelectionStart);
-    editor.setSelectionEnd(beforeSelectionEnd);
+      editor.setSelectionStart(beforeSelectionStart);
+      editor.setSelectionEnd(beforeSelectionEnd);
+    }
 
     editor.requestFocus();
   }

@@ -2,10 +2,12 @@ package hjsi.posthangeul.editor;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.event.CaretListener;
 
 
 public class SwiftEditor extends JPanel {
@@ -27,6 +29,10 @@ public class SwiftEditor extends JPanel {
     add(scrollPane);
   }
 
+  public void addCaretListener(CaretListener listener) {
+    textPane.addCaretListener(listener);
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -35,5 +41,14 @@ public class SwiftEditor extends JPanel {
   @Override
   public void requestFocus() {
     textPane.requestFocus();
+  }
+
+  public String getFontFamily() {
+    return textPane.getFont().getFamily();
+  }
+
+  public void setFont(String fontFamily, int size) {
+    Font font = new Font(fontFamily, Font.PLAIN, size);
+    textPane.setFont(font);
   }
 }

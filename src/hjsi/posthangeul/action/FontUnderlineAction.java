@@ -2,7 +2,9 @@ package hjsi.posthangeul.action;
 
 import java.awt.event.ActionEvent;
 
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.border.BevelBorder;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -24,6 +26,10 @@ public class FontUnderlineAction extends StyledTextAction {
     SimpleAttributeSet sas = new SimpleAttributeSet();
     StyleConstants.setUnderline(sas, toApply);
     setCharacterAttributes(editor, sas, false);
+    if (toApply)
+      ((JButton) e.getSource()).setBorder(new BevelBorder(BevelBorder.LOWERED));
+    else
+      ((JButton) e.getSource()).setBorder(new BevelBorder(BevelBorder.RAISED));
 
     editor.requestFocus();
   }
