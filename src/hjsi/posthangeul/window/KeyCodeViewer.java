@@ -45,13 +45,16 @@ public class KeyCodeViewer extends JDialog implements KeyListener {
    */
   @Override
   public void keyPressed(KeyEvent e) {
+    System.out.println(e.toString());
     keyChar = e.getKeyChar();
     keyCode = e.getKeyCode();
     repaint();
   }
 
   @Override
-  public void keyReleased(KeyEvent e) {}
+  public void keyReleased(KeyEvent e) {
+    System.out.println(e.toString());
+  }
 
   /*
    * (non-Javadoc)
@@ -60,6 +63,7 @@ public class KeyCodeViewer extends JDialog implements KeyListener {
    */
   @Override
   public void keyTyped(KeyEvent e) {
+    System.out.println(e.toString());
     if (e.getKeyChar() == KeyEvent.VK_ESCAPE)
       dispose();
   }
