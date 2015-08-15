@@ -6,6 +6,7 @@ import java.io.File;
 
 import javax.swing.JFrame;
 
+import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 
 public class PostHangeulApp {
@@ -45,6 +46,7 @@ public class PostHangeulApp {
   }
 
   public static void main(String[] args) {
+    new HangeulAssembler(); // 테스트 코드 출력용
     PostHangeulApp app = new PostHangeulApp();
     app.editor.requestFocus();
   }
