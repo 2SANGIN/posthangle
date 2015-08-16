@@ -87,8 +87,9 @@ public class TextLineNumber extends JPanel implements CaretListener, DocumentLis
 		setFont(component.getFont());
 
 		setBorderGap(5);
-		setCurrentLineForeground(Color.RED);
-		setDigitAlignment(RIGHT);
+		setCurrentLineForeground(Color.MAGENTA);
+		setFont(new Font(Font.SANS_SERIF, Font.BOLD, component.getFont().getSize()));
+		setDigitAlignment(CENTER);
 		setMinimumDisplayDigits(minimumDisplayDigits);
 
 		component.getDocument().addDocumentListener(this);
