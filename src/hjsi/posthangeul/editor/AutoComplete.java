@@ -22,12 +22,14 @@ public class AutoComplete extends JScrollPane implements KeyListener {
   private static final long serialVersionUID = 4592225249925286812L;
 
   private JTextPane editor;
-
-  private JList<String> wordList;
-
   private int oldCaretPos;
-  private StringBuffer recentWord;
-  private int recentWordPos;
+
+  private JList<String> listView;
+
+  private StringBuffer inputWord;
+  private int inputWordPos;
+  
+  private WordManager wordManager = new WordManager();
 
   public AutoComplete(JTextPane textPane) {
     editor = textPane;
@@ -44,12 +46,12 @@ public class AutoComplete extends JScrollPane implements KeyListener {
     setBorder(new CompoundBorder(outer, inner));
     System.out.println(getInsets().toString());
 
-    wordList = new JList<String>();
-    wordList.setSize(getSize());
-    wordList.setVisible(true);
-    getViewport().add(wordList);
+    listView = new JList<String>();
+    listView.setSize(getSize());
+    listView.setVisible(true);
+    getViewport().add(listView);
 
-    initRecentWord();
+    initInputWord();
   }
 
   /*
@@ -64,49 +66,47 @@ public class AutoComplete extends JScrollPane implements KeyListener {
 
   @Override
   public void keyPressed(KeyEvent e) {
-    int oldPos = editor.getCaretPosition();
-    int newPos;
-
     switch (e.getKeyCode()) {
       case KeyEvent.VK_ESCAPE:
         if (isShowing() == false) {
-          initRecentWord();
+          initInputWord();
         }
         break;
 
       case KeyEvent.VK_BACK_SPACE:
-        if (recentWordPos > 0)
-          recentWord.deleteCharAt(recentWordPos - 1);
+        if (inputWordPos > 0)
+          inputWord.deleteCharAt(inputWordPos - 1);
       case KeyEvent.VK_LEFT:
         if ((e.getModifiers() & KeyEvent.ALT_MASK) > 0)
-          recentWordPos = 0;
+          inputWordPos = 0;
         else
-          recentWordPos = Math.max(0, recentWordPos - 1);
+          inputWordPos = Math.max(0, inputWordPos - 1);
         break;
 
       case KeyEvent.VK_RIGHT:
         if ((e.getModifiers() & KeyEvent.ALT_MASK) > 0)
-          recentWordPos = recentWord.length();
+          inputWordPos = inputWord.length();
         else
-          recentWordPos = Math.min(recentWordPos + 1, recentWord.length());
+          inputWordPos = Math.min(inputWordPos + 1, inputWord.length());
         break;
 
       case KeyEvent.VK_HOME:
-        recentWordPos = 0;
+        // TODO old, new 캐럿 위치 사이에 공백 있는지 검사해야함
         break;
 
       case KeyEvent.VK_END:
-        recentWordPos = recentWord.length();
+        inputWordPos = inputWord.length();
         break;
 
       case KeyEvent.VK_ENTER:
       case KeyEvent.VK_SPACE:
-        recentWord.delete(recentWordPos, recentWord.length());
-        addWordList();
+        inputWord.delete(inputWordPos, inputWord.length());
+        wordManager.countWord(inputWord);
+        initInputWord();
         break;
     }
 
-    System.out.println(recentWordPos);
+    System.out.println(inputWordPos);
   }
 
   @Override
@@ -115,7 +115,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
       char ch = e.getKeyChar();
       if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E)
           || (0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
-        appendRecentWord(e.getKeyChar());
+        appendInputWord(e.getKeyChar());
       }
     }
   }
@@ -142,43 +142,27 @@ public class AutoComplete extends JScrollPane implements KeyListener {
   }
 
   public void showPopup() {
-    if (wordMap.size() > 0) {
-      try {
-        Set<String> temp = wordMap.keySet();
-        wordList.setListData(new Vector<String>(temp));
-
-        refreshPopupLocation();
-        setVisible(true);
-      } catch (BadLocationException e1) {
-        e1.printStackTrace();
-      }
+    try {
+      Vector<String> matchings = wordManager.getMatchingWords(inputWord);
+      listView.setListData(matchings);
+      refreshPopupLocation();
+      setVisible(true);
+    } catch (BadLocationException e1) {
+      e1.printStackTrace();
     }
   }
 
-  private void addWordList() {
-    if (recentWord.length() > 1) {
-      String wordKey = recentWord.toString();
-      Integer wordCount = wordMap.get(wordKey);
-      if (wordCount == null)
-        wordCount = 1;
-      else
-        wordCount++;
-      wordMap.put(wordKey, wordCount);
-    }
-    initRecentWord();
+  private void initInputWord() {
+    inputWord = new StringBuffer();
+    inputWordPos = 0;
   }
 
-  private void initRecentWord() {
-    recentWord = new StringBuffer();
-    recentWordPos = 0;
+  private void appendInputWord(char ch) {
+    inputWord.insert(inputWordPos, ch);
+    inputWordPos++;
   }
 
-  private void appendRecentWord(char ch) {
-    recentWord.insert(recentWordPos, ch);
-    recentWordPos++;
-  }
-
-  private boolean isKorean(String str) {
+  private boolean isKorean(CharSequence str) {
     for (int i = 0; i < str.length(); i++) {
       char ch = str.charAt(i);
       if (ch < 0xAC00 || 0xD7A3 < ch)
@@ -187,7 +171,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
     return true;
   }
 
-  private boolean isKoreanAlphabet(String str) {
+  private boolean isKoreanAlphabet(CharSequence str) {
     for (int i = 0; i < str.length(); i++) {
       char ch = str.charAt(i);
       if (ch < 0x3131 || 0x318E < ch)
@@ -196,7 +180,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
     return true;
   }
 
-  private boolean isEnglish(String str) {
+  private boolean isEnglish(CharSequence str) {
     for (int i = 0; i < str.length(); i++) {
       char ch = str.charAt(i);
       if ((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch))
@@ -205,7 +189,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
     return true;
   }
 
-  private boolean isNumber(String str) {
+  private boolean isNumber(CharSequence str) {
     for (int i = 0; i < str.length(); i++) {
       char ch = str.charAt(i);
       if (ch < 0x30 || 0x39 < ch)
