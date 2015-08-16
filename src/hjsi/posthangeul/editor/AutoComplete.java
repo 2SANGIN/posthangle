@@ -28,7 +28,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
 
   private StringBuffer inputWord;
   private int inputWordPos;
-  
+
   private WordManager wordManager = new WordManager();
 
   public AutoComplete(JTextPane textPane) {
@@ -66,6 +66,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
 
   @Override
   public void keyPressed(KeyEvent e) {
+    System.out.println(e.toString());
     switch (e.getKeyCode()) {
       case KeyEvent.VK_ESCAPE:
         if (isShowing() == false) {
@@ -101,32 +102,42 @@ public class AutoComplete extends JScrollPane implements KeyListener {
       case KeyEvent.VK_ENTER:
       case KeyEvent.VK_SPACE:
         inputWord.delete(inputWordPos, inputWord.length());
-        wordManager.countWord(inputWord);
+        wordManager.countWord(inputWord.toString());
         initInputWord();
         break;
     }
-
+    
     System.out.println(inputWordPos);
   }
 
   @Override
   public void keyTyped(KeyEvent e) {
+    System.out.println(e.toString());
     if (e.isConsumed() == false) {
       char ch = e.getKeyChar();
       if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E)
           || (0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
         appendInputWord(e.getKeyChar());
+        int index = HangeulAssembler.getFinalIndex(ch);
+        if (index > 0) {
+          char fi = HangeulAssembler.getFinalChar(index);
+          System.out.println(fi);
+        }
       }
     }
   }
 
   @Override
   public void keyReleased(KeyEvent e) {
+    System.out.println(e.toString());
     if (e.isConsumed() == false) {
       char ch = e.getKeyChar();
       // 한글 또는 영문인지 검사
       if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E)
           || (0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
+        /*
+         * TODO 릴리즈 된 키가 한글 자모음이면 직접 inputWord에 조합시켜줘야함...
+         */
         if (isShowing() == false) {
           showPopup();
         }
@@ -143,7 +154,7 @@ public class AutoComplete extends JScrollPane implements KeyListener {
 
   public void showPopup() {
     try {
-      Vector<String> matchings = wordManager.getMatchingWords(inputWord);
+      Vector<String> matchings = wordManager.getMatchingWords(inputWord.toString());
       listView.setListData(matchings);
       refreshPopupLocation();
       setVisible(true);
