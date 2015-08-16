@@ -65,4 +65,8 @@ public class PostHangeulApp {
     this.currentFile = currentDocument;
     mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
   }
+  
+  public JFrame getWindow() {
+	  return mainWindow;
+  }
 }

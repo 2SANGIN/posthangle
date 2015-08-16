@@ -16,12 +16,14 @@ public class SwiftEditor extends JPanel {
   JScrollPane scrollPane;
   AutoComplete autocomplete;
   TextLineNumber linenum;
+  GoToLine gotoline;
 
   {
     textPane = new JTextPane();
     scrollPane = new JScrollPane(textPane);
     autocomplete = new AutoComplete(textPane);
     linenum = new TextLineNumber(textPane);
+    gotoline = new GoToLine(textPane);
     linenum.setBackground(Color.WHITE);
     scrollPane.setRowHeaderView(linenum);
     
