@@ -1,11 +1,19 @@
 package hjsi.posthangeul.editor;
 
 import java.util.Stack;
+import java.util.TreeMap;
 
 public class PostIME {
+  private enum IME_STATE {
+    START, INITIAL, SINGLE_MEDIAL, DOUBLE_MEDIAL, SINGLE_FINAL, DOUBLE_FINAL, END1, END2
+  }
+
   private static final int BASE_CODE = 0xAC00;
+
   private static final int FACTOR_INITIAL = 588;
+
   private static final int FACTOR_MEDIAL = 28;
+
   private static final int FACTOR_FINAL = 1;
 
   private static final char[] INITIAL_LIST = {'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ',
@@ -17,96 +25,54 @@ public class PostIME {
   private static final char[] FINAL_LIST = {'\0', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ',
       'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'};
 
+  private static final TreeMap<Character, Character> ALPHABET_TO_HANGEUL = new TreeMap<>();
+
+  private static final int CONSONANT = 0;
+
+  private static final int VOWEL = 1;
+
   public static char assemble(int initial, int medial, int fin) {
     return (char) (BASE_CODE + initial * FACTOR_INITIAL + medial * FACTOR_MEDIAL + fin);
-  }
-
-  public static int getInitialIndex(char hangeul) {
-    return (hangeul - BASE_CODE) / FACTOR_INITIAL;
-  }
-
-  public static int getMedialIndex(char hangeul) {
-    return (hangeul - BASE_CODE) % FACTOR_INITIAL / FACTOR_MEDIAL;
-  }
-
-  public static int getFinalIndex(char hangeul) {
-    return (hangeul - BASE_CODE) % FACTOR_MEDIAL;
-  }
-
-
-  public static char getInitialChar(int initialIndex) {
-    return INITIAL_LIST[initialIndex];
-  }
-
-  public static char getMedialChar(int medialIndex) {
-    return MEDIAL_LIST[medialIndex];
   }
 
   public static char getFinalChar(int finalIndex) {
     return FINAL_LIST[finalIndex];
   }
 
-  public static boolean isConsonant(char keyCode) {
-    return (0x3131 <= keyCode && keyCode <= 0x314E);
+  public static int getFinalIndex(char hangeul) {
+    return (hangeul - BASE_CODE) % FACTOR_MEDIAL;
   }
 
-  public static boolean isVowel(char keyCode) {
-    return (0x314F <= keyCode && keyCode <= 0x318E);
+  public static char getInitialChar(int initialIndex) {
+    return INITIAL_LIST[initialIndex];
   }
 
-  private static final int CONSONANT = 0;
-  private static final int VOWEL = 1;
-
-  private enum IME_STATE {
-    START, INITIAL, SINGLE_MEDIAL, DOUBLE_MEDIAL, SINGLE_FINAL, DOUBLE_FINAL, END1, END2
+  public static int getInitialIndex(char hangeul) {
+    return (hangeul - BASE_CODE) / FACTOR_INITIAL;
   }
 
-  private static IME_STATE state = IME_STATE.START;
-  private static char uncommittedChar;
-  private static char prevKey;
-  private static char keyChar;
+  public static char getMedialChar(int medialIndex) {
+    return MEDIAL_LIST[medialIndex];
+  }
 
-  public static Stack<Character> uncommittedStack = new Stack<>();
-  public static Stack<Character> keyStack = new Stack<>();
-  public static Stack<IME_STATE> inStackState = new Stack<>();
-  public static Stack<Character> outStack = new Stack<>();
+  public static int getMedialIndex(char hangeul) {
+    return (hangeul - BASE_CODE) % FACTOR_INITIAL / FACTOR_MEDIAL;
+  }
 
-  private static boolean tryDoubleMedial() {
-    char dMedialTbl[][] = {{'ㅗ', 'ㅏ', 'ㅘ'}, {'ㅗ', 'ㅐ', 'ㅙ'}, {'ㅗ', 'ㅣ', 'ㅚ'}, {'ㅜ', 'ㅓ', 'ㅝ'},
-        {'ㅜ', 'ㅔ', 'ㅞ'}, {'ㅜ', 'ㅣ', 'ㅟ'}, {'ㅡ', 'ㅣ', 'ㅢ'}};
-    /* 이전에 입력된 키와 현재 입력된 키를 겹모음 테이블에서 검색한다. */
-    for (char[] vowel : dMedialTbl) {
-      if (vowel[0] == prevKey && vowel[1] == keyChar) {
-        keyChar = vowel[2];
-        return true;
-      }
+  public static boolean isConsonant(char ch) {
+    return (0x3131 <= ch && ch <= 0x314E);
+  }
+
+  public static boolean isVowel(char ch) {
+    return (0x314F <= ch && ch <= 0x318E);
+  }
+
+  private static int searchFinalIndex(char keyChar) {
+    for (int i = 1; i < FINAL_LIST.length; i++) {
+      if (FINAL_LIST[i] == keyChar)
+        return i;
     }
-    return false;
-  }
-
-  private static boolean tryDoubleFinal() {
-    char dFinalTbl[][] = {{'ㄱ', 'ㅅ', 'ㄳ'}, {'ㄴ', 'ㅈ', 'ㄵ'}, {'ㄴ', 'ㅎ', 'ㄶ'}, {'ㄹ', 'ㄱ', 'ㄺ'},
-        {'ㄹ', 'ㅁ', 'ㄻ'}, {'ㄹ', 'ㅂ', 'ㄼ'}, {'ㄹ', 'ㅅ', 'ㄽ'}, {'ㄹ', 'ㅌ', 'ㄾ'}, {'ㄹ', 'ㅍ', 'ㄿ'},
-        {'ㄹ', 'ㅎ', 'ㅀ'}, {'ㅂ', 'ㅅ', 'ㅄ'}};
-    /* 이전에 입력된 키와 현재 입력된 키를 겹받침 테이블에서 찾아서 있는지를 검사한다. */
-    for (char[] fin : dFinalTbl) {
-      if (fin[0] == prevKey && fin[1] == keyChar) {
-        keyChar = fin[2];
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static char assemble(int index, int factor) {
-    uncommittedChar = (char) (uncommittedChar / factor * factor); // 뒷자리 버림
-    uncommittedChar = (char) (uncommittedChar + index * factor);
-    return uncommittedChar;
-  }
-
-  public static char disassemble(int factor) {
-    uncommittedChar = (char) (uncommittedChar / factor * factor);
-    return uncommittedChar;
+    return -1;
   }
 
   private static int searchInitialIndex(char keyChar) {
@@ -125,19 +91,58 @@ public class PostIME {
     return -1;
   }
 
-  private static int searchFinalIndex(char keyChar) {
-    for (int i = 1; i < FINAL_LIST.length; i++) {
-      if (FINAL_LIST[i] == keyChar)
-        return i;
-    }
-    return -1;
+  static {
+    ALPHABET_TO_HANGEUL.put('a', 'ㅁ');
+    ALPHABET_TO_HANGEUL.put('b', 'ㅠ');
+    ALPHABET_TO_HANGEUL.put('c', 'ㅊ');
+    ALPHABET_TO_HANGEUL.put('d', 'ㅇ');
+    ALPHABET_TO_HANGEUL.put('e', 'ㄷ');
+    ALPHABET_TO_HANGEUL.put('f', 'ㄹ');
+    ALPHABET_TO_HANGEUL.put('g', 'ㅎ');
+    ALPHABET_TO_HANGEUL.put('h', 'ㅗ');
+    ALPHABET_TO_HANGEUL.put('i', 'ㅑ');
+    ALPHABET_TO_HANGEUL.put('j', 'ㅓ');
+    ALPHABET_TO_HANGEUL.put('k', 'ㅏ');
+    ALPHABET_TO_HANGEUL.put('l', 'ㅣ');
+    ALPHABET_TO_HANGEUL.put('m', 'ㅡ');
+    ALPHABET_TO_HANGEUL.put('n', 'ㅜ');
+    ALPHABET_TO_HANGEUL.put('o', 'ㅐ');
+    ALPHABET_TO_HANGEUL.put('p', 'ㅔ');
+    ALPHABET_TO_HANGEUL.put('q', 'ㅂ');
+    ALPHABET_TO_HANGEUL.put('r', 'ㄱ');
+    ALPHABET_TO_HANGEUL.put('s', 'ㄴ');
+    ALPHABET_TO_HANGEUL.put('t', 'ㅅ');
+    ALPHABET_TO_HANGEUL.put('u', 'ㅕ');
+    ALPHABET_TO_HANGEUL.put('v', 'ㅍ');
+    ALPHABET_TO_HANGEUL.put('w', 'ㅈ');
+    ALPHABET_TO_HANGEUL.put('x', 'ㅌ');
+    ALPHABET_TO_HANGEUL.put('y', 'ㅛ');
+    ALPHABET_TO_HANGEUL.put('z', 'ㅋ');
+    ALPHABET_TO_HANGEUL.put('Q', 'ㅃ');
+    ALPHABET_TO_HANGEUL.put('W', 'ㅉ');
+    ALPHABET_TO_HANGEUL.put('E', 'ㄸ');
+    ALPHABET_TO_HANGEUL.put('R', 'ㄲ');
+    ALPHABET_TO_HANGEUL.put('T', 'ㅆ');
+    ALPHABET_TO_HANGEUL.put('O', 'ㅒ');
+    ALPHABET_TO_HANGEUL.put('P', 'ㅖ');
   }
+
+  private IME_STATE state = IME_STATE.START;
+  private char uncommittedChar;
+  private char prevKey;
+  private char keyChar;
+
+  private Stack<Character> uncommittedStack = new Stack<>();
+  private Stack<Character> keyStack = new Stack<>();
+  private Stack<IME_STATE> stateStack = new Stack<>();
+  private Stack<Character> outStack = new Stack<>();
 
   /**
    * @param ch 입력된 키
    * @return 한 글자의 조합이 끝나면 true를, 계속 조합중이면 false를, 완성된 글자의 코드는 입력 스택의 가장 마지막에서 구할 수 있다.
    */
-  public static boolean hanAutomata2(char ch) {
+  public boolean processInput(char ch) {
+    ch = ALPHABET_TO_HANGEUL.get(ch);
     keyChar = ch; // 작업할 keyCode로 복사
 
     /*
@@ -249,13 +254,12 @@ public class PostIME {
 
       case SINGLE_MEDIAL: /* 중성코드는 복중성과 같이 처리된다. */
       case DOUBLE_MEDIAL: /* 복중성 코드 처리 */
-        // uncommittedChar = (uncommittedChar & 0xFC1F) | ((keyChar - 0xA0) << 5);
+        uncommittedChar = assemble(searchMedialIndex(keyChar), FACTOR_MEDIAL);
         break;
 
-      case SINGLE_FINAL: /* 종성코드는 초성->종성 테이블에서 변환되어야 한다. */
-        // keyChar = Cho2Jong[keyChar - 0x82];
+      case SINGLE_FINAL:
       case DOUBLE_FINAL: /* 복종성 및 종성 코드 처리 */
-        // uncommittedChar = (uncommittedChar & 0xFFE0) | (keyChar - 0xC0);
+        uncommittedChar = assemble(searchFinalIndex(keyChar), FACTOR_FINAL);
         break;
 
       case END1:
@@ -269,20 +273,72 @@ public class PostIME {
 
         /* 입력스택에서 하나를 빼갔으므로 스택포인터 조정 */
         uncommittedStack.pop();
-        inStackState.pop();
+        stateStack.pop();
         keyStack.pop();
-        return true; /* 1은 완료되었음을 의미 */
+        return true; // 조립 완료되었음을 의미
 
       default:
         state = IME_STATE.START;
         break;
     }
 
-    inStackState.push(state);
+    stateStack.push(state);
     uncommittedStack.push(uncommittedChar);
     keyStack.push(ch);
 
     /* 아직 한글 조립 중 */
+    return false;
+  }
+
+  public void printUncommittedStack() {
+    for (int i = 0; i < uncommittedStack.size(); i++) {
+      System.out.print(uncommittedStack.get(i));
+    }
+    System.out.println();
+  }
+
+  public void printOutStack() {
+    for (int i = 0; i < outStack.size(); i++) {
+      System.out.print(outStack.get(i));
+    }
+    System.out.println();
+  }
+
+  private char assemble(int index, int factor) {
+    uncommittedChar = (char) (uncommittedChar / factor * factor); // 뒷자리 버림
+    uncommittedChar = (char) (uncommittedChar + index * factor);
+    return uncommittedChar;
+  }
+
+  private char disassemble(int factor) {
+    uncommittedChar = (char) (uncommittedChar / factor * factor);
+    return uncommittedChar;
+  }
+
+  private boolean tryDoubleFinal() {
+    char dFinalTbl[][] = {{'ㄱ', 'ㅅ', 'ㄳ'}, {'ㄴ', 'ㅈ', 'ㄵ'}, {'ㄴ', 'ㅎ', 'ㄶ'}, {'ㄹ', 'ㄱ', 'ㄺ'},
+        {'ㄹ', 'ㅁ', 'ㄻ'}, {'ㄹ', 'ㅂ', 'ㄼ'}, {'ㄹ', 'ㅅ', 'ㄽ'}, {'ㄹ', 'ㅌ', 'ㄾ'}, {'ㄹ', 'ㅍ', 'ㄿ'},
+        {'ㄹ', 'ㅎ', 'ㅀ'}, {'ㅂ', 'ㅅ', 'ㅄ'}};
+    /* 이전에 입력된 키와 현재 입력된 키를 겹받침 테이블에서 찾아서 있는지를 검사한다. */
+    for (char[] fin : dFinalTbl) {
+      if (fin[0] == prevKey && fin[1] == keyChar) {
+        keyChar = fin[2];
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean tryDoubleMedial() {
+    char dMedialTbl[][] = {{'ㅗ', 'ㅏ', 'ㅘ'}, {'ㅗ', 'ㅐ', 'ㅙ'}, {'ㅗ', 'ㅣ', 'ㅚ'}, {'ㅜ', 'ㅓ', 'ㅝ'},
+        {'ㅜ', 'ㅔ', 'ㅞ'}, {'ㅜ', 'ㅣ', 'ㅟ'}, {'ㅡ', 'ㅣ', 'ㅢ'}};
+    /* 이전에 입력된 키와 현재 입력된 키를 겹모음 테이블에서 검색한다. */
+    for (char[] vowel : dMedialTbl) {
+      if (vowel[0] == prevKey && vowel[1] == keyChar) {
+        keyChar = vowel[2];
+        return true;
+      }
+    }
     return false;
   }
 }

@@ -46,7 +46,6 @@ public class WordManager {
   }
 
   public void countWord(String inputWord) {
-    System.out.println(inputWord);
     if (inputWord.length() > 1) {
       Integer count = wordCounter.get(inputWord);
       if (count != null)
@@ -56,7 +55,7 @@ public class WordManager {
       wordCounter.put(inputWord.toString(), count);
     }
   }
-  
+
   public Vector<String> getMatchingWords(String inputWord) {
     Vector<String> matchingWords = new Vector<String>();
     for (String str : wordCounter.keySet()) {
