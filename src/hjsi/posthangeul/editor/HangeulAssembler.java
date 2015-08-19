@@ -63,6 +63,11 @@ public class HangeulAssembler {
       System.out.print(String.format("%c ", i));
     System.out.println();
 
+    for (int i = 0x314f; i <= 0x318e; i++) {
+      System.out.print(String.format("%c", i));
+    }
+    System.out.println();
+
     /* 한글 완성된 글자 범위 */
     int total = 0xd7a3 - 0xac00 + 1;
     int cnt = 0;

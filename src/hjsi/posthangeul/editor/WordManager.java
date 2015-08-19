@@ -46,6 +46,7 @@ public class WordManager {
   }
 
   public void countWord(String inputWord) {
+    System.out.println(inputWord);
     if (inputWord.length() > 1) {
       Integer count = wordCounter.get(inputWord);
       if (count != null)
