@@ -20,16 +20,18 @@ import javax.swing.text.BadLocationException;
 public class AutoComplete extends JScrollPane implements KeyListener, InputMethodListener {
   private static final long serialVersionUID = 4592225249925286812L;
 
+  /**
+   * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
+   */
+  private StringBuffer uncommBuf;
+  /**
+   * 조립이 끝나 완성된 한글 버퍼
+   */
+  private StringBuffer commBuf;
+  private int commBufPos;
+
   private JTextPane editor;
-
   private JList<String> listView;
-
-  private PostIME ime = new PostIME();
-
-  private boolean isComposition = false;
-  private String lastInputWord;
-  private StringBuffer inputWord;
-  private int inputWordPos;
 
   private WordManager wordManager = new WordManager();
 
@@ -56,8 +58,31 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
     getViewport().add(listView);
 
     /* 기타 객체 생성 */
-    lastInputWord = new String();
-    initInputWord();
+    uncommBuf = new StringBuffer();
+    initWordBuffers();
+  }
+
+  @Override
+  public void caretPositionChanged(InputMethodEvent event) {}
+
+  @Override
+  public void inputMethodTextChanged(InputMethodEvent event) {
+    System.out.println(event.paramString());
+    AttributedCharacterIterator str = event.getText();
+    if (str != null) {
+      if (event.getCommittedCharacterCount() > 0) {
+        System.out.print("committed : ");
+        System.out.print(str.first());
+        appendCommitted(str.first());
+      } else {
+        System.out.print("uncommitted : " + str.last());
+        updateUncommitted(str.last());
+      }
+      System.out.println("\ncount " + str.getEndIndex());
+    } else {
+      updateUncommitted('\0');
+    }
+    System.out.println("inputword : " + commBuf.toString());
   }
 
   @Override
@@ -68,7 +93,7 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
 
 
     if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
-      appendInputWord(ch);
+      appendCommitted(ch);
     }
 
     switch (code) {
@@ -76,21 +101,21 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
         if (isShowing())
           setVisible(false);
         else
-          initInputWord();
+          initWordBuffers();
         break;
 
       case KeyEvent.VK_BACK_SPACE:
-        backspaceInputWord();
-        System.out.println(inputWord.toString());
+        backspaceCommitted();
+        System.out.println(commBuf.toString());
         break;
 
       case KeyEvent.VK_ENTER:
       case KeyEvent.VK_SPACE:
-        System.out.println(inputWord);
-        if (inputWord.length() > 1) {
-          wordManager.countWord(inputWord.toString());
+        System.out.println(commBuf);
+        if (commBuf.length() > 1) {
+          wordManager.countWord(commBuf.toString());
         }
-        initInputWord();
+        initWordBuffers();
         break;
 
       /*
@@ -103,10 +128,6 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
 
   }
 
-  @Override
-  public void keyTyped(KeyEvent e) {
-    // System.out.println(e.paramString());
-  }
 
   @Override
   public void keyReleased(KeyEvent e) {
@@ -127,21 +148,20 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
     // }
 
     /*
-     * StringBuffer log = new StringBuffer(); for (int i = 0; i < inputWord.length(); i++) { if (i
-     * == inputWordPos) log.append('|'); log.append(inputWord.charAt(i)); System.out.println(log);
-     * System.out.println(inputWordPos); }
+     * StringBuffer log = new StringBuffer(); for (int i = 0; i < commBuf.length(); i++) { if (i ==
+     * commBufPos) log.append('|'); log.append(commBuf.charAt(i)); System.out.println(log);
+     * System.out.println(commBufPos); }
      */
   }
 
-
-  private void refreshPopupLocation() throws BadLocationException {
-    Rectangle anchor = editor.modelToView(editor.getCaretPosition());
-    setLocation(anchor.x, anchor.y + anchor.height);
+  @Override
+  public void keyTyped(KeyEvent e) {
+    // System.out.println(e.paramString());
   }
 
   public void showPopup() {
     try {
-      Vector<String> matchings = wordManager.getMatchingWords(inputWord.toString());
+      Vector<String> matchings = wordManager.getMatchingWords(commBuf.toString());
       listView.setListData(matchings);
       refreshPopupLocation();
       setVisible(true);
@@ -150,57 +170,38 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
     }
   }
 
-  private void initInputWord() {
-    inputWord = new StringBuffer();
-    inputWordPos = 0;
+  private void appendCommitted(char ch) {
+    commBuf.insert(commBufPos, ch);
+    commBufPos++;
   }
 
-  private void appendInputWord(char ch) {
-    inputWord.insert(inputWordPos, ch);
-    inputWordPos++;
-  }
-
-  private void overwriteInputWord(char ch) {
-    if (inputWordPos >= 0 && inputWordPos < inputWord.length())
-      inputWord.setCharAt(inputWordPos, ch);
-    else {
-      inputWord.append(ch);
+  private void backspaceCommitted() {
+    if (commBufPos > 0) {
+      commBuf.delete(commBufPos - 1, commBufPos);
+      commBufPos--;
     }
   }
 
-  private void backspaceInputWord() {
-    if (inputWordPos > 0) {
-      inputWord.delete(inputWordPos - 1, inputWordPos);
-      inputWordPos--;
-    }
+  private void initWordBuffers() {
+    commBuf = new StringBuffer();
+    commBufPos = 0;
+    if (uncommBuf.length() > 0)
+      uncommBuf.setCharAt(0, '\0');
+    else
+      uncommBuf.append('\0');
   }
 
-  @Override
-  public void inputMethodTextChanged(InputMethodEvent event) {
-    System.out.println(event.paramString());
-    AttributedCharacterIterator str = event.getText();
-    if (str != null) {
-      if (event.getCommittedCharacterCount() > 0) {
-        System.out.print("committed : ");
-        for (int i = 0; i < event.getCommittedCharacterCount(); i++) {
-          System.out.print(str.setIndex(i));
-        }
-        System.out.print("\nuncommitted : ");
-        for (int i = event.getCommittedCharacterCount(); i < str.getEndIndex(); i++) {
-          System.out.print(str.setIndex(i));
-        }
-        overwriteInputWord(str.first());
-        inputWordPos++;
-      } else {
-        System.out.print("uncommitted : " + str.last());
-        overwriteInputWord(str.last());
-      }
+  private boolean isEnglish(char ch) {
+    return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
+  }
 
-      System.out.println("\ncount " + str.getEndIndex());
+  private boolean isEnglish(CharSequence str) {
+    for (int i = 0; i < str.length(); i++) {
+      char ch = str.charAt(i);
+      if (!isEnglish(ch))
+        return false;
     }
-
-
-    System.out.println("inputword : " + inputWord.toString());
+    return true;
   }
 
   private boolean isKorean(CharSequence str) {
@@ -221,19 +222,6 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
     return true;
   }
 
-  private boolean isEnglish(CharSequence str) {
-    for (int i = 0; i < str.length(); i++) {
-      char ch = str.charAt(i);
-      if (!isEnglish(ch))
-        return false;
-    }
-    return true;
-  }
-
-  private boolean isEnglish(char ch) {
-    return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
-  }
-
   private boolean isNumber(CharSequence str) {
     for (int i = 0; i < str.length(); i++) {
       char ch = str.charAt(i);
@@ -243,7 +231,16 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
     return true;
   }
 
-  @Override
-  public void caretPositionChanged(InputMethodEvent event) {
+  private void refreshPopupLocation() throws BadLocationException {
+    Rectangle anchor = editor.modelToView(editor.getCaretPosition());
+    setLocation(anchor.x, anchor.y + anchor.height);
+  }
+
+  private void updateUncommitted(char ch) {
+    if (uncommBuf.length() > 0)
+      uncommBuf.setCharAt(0, ch);
+    else {
+      uncommBuf.append(ch);
+    }
   }
 }
