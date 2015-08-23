@@ -4,37 +4,39 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Scanner;
 
-import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 
-/**
- * Go to line by ctrl + 'L'
- */
-public class GoToLine {
-	int lineNum;
+public class SwitchLine {
 	JTextPane parent;
+	int curLine;
+	int targetLine;
 
-	public GoToLine(JTextPane textPane) {
+	public SwitchLine(JTextPane textPane) {
 		parent = textPane;
 		parent.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent ke) {
-				if (ke.getKeyCode() == KeyEvent.VK_L) {
-					if (ke.isControlDown()) {
-						String str = JOptionPane.showInputDialog(parent, null, null);
+				if (ke.getKeyCode() == KeyEvent.VK_UP) {
+					if (ke.isAltDown()) {
+						curLine = parent.getCaretPosition();
+						targetLine = curLine - 1;
+						parent.setCaretPosition(setcursor(targetLine));
 
-						try {
-							lineNum = Integer.parseInt(str);
-							parent.setCaretPosition(0);
-							parent.setCaretPosition(setcursor(lineNum));
-						} catch (Exception e) {
-							parent.setCaretPosition(textPane.getDocument().getLength());
-						}
 					}
+				}
+
+				else if (ke.getKeyCode() == KeyEvent.VK_KP_DOWN) {
+					if (ke.isAltDown()) {
+						curLine = parent.getCaretPosition();
+						targetLine = curLine + 1;
+
+					}
+
 				}
 			}
 		});
-	}
 
+	}
+	
 	public int setcursor(int newlineno) {
 		int pos = 0;
 		int i = 0;
@@ -51,7 +53,4 @@ public class GoToLine {
 		return pos;
 	}
 
-	public int getLineNum() {
-		return lineNum;
-	}
 }

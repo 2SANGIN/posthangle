@@ -17,6 +17,8 @@ public class SwiftEditor extends JPanel {
   AutoComplete autocomplete;
   TextLineNumber linenum;
   GoToLine gotoline;
+  RemoveLine remove;
+  SwitchLine switchLine;
 
   {
     textPane = new JTextPane();
@@ -24,6 +26,8 @@ public class SwiftEditor extends JPanel {
     autocomplete = new AutoComplete(textPane);
     linenum = new TextLineNumber(textPane);
     gotoline = new GoToLine(textPane);
+    remove = new RemoveLine(textPane);
+    switchLine = new SwitchLine(textPane);
     linenum.setBackground(Color.WHITE);
     scrollPane.setRowHeaderView(linenum);
     

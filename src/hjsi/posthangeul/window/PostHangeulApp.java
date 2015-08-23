@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 
 import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
 
 public class PostHangeulApp {
   JFrame mainWindow;
@@ -33,6 +34,7 @@ public class PostHangeulApp {
     editor = new SwiftEditor();
     editor.setFont(shortcuts.getFontFamily(), defaultFontSize);
     editor.addCaretListener(shortcuts);
+    editor.addCaretListener(new VisibleCaretListener()); // for word wrapping
     mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
 
     /* create main window */
