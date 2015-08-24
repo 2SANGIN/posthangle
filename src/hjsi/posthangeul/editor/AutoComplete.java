@@ -2,6 +2,7 @@ package hjsi.posthangeul.editor;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Rectangle;
 import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
@@ -82,6 +83,11 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
+    * 텍스트 에디터의 캐럿 포지션을 별도로 관리한다. 다른 메소드에서 캐럿의 최신 위치를 사용하기 위함.
+    */
+   private int caretPos = 0;
+
+   /**
     * 조립이 끝나 완성된 한글 버퍼
     */
    private StringBuffer commBuf;
@@ -112,14 +118,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private StringBuffer uncommBuf;
 
    /**
-    * 현재 입력하고 있는 단어 영역에 표시를 해준다.
-    */
-   private final JPanel wordBox;
-
-   /**
     * 현재 자동완성 입력도우미가 화면에 보여지고 있는가를 나타낸다.
     */
    private boolean visibleInputAssist = false;
+
+   /**
+    * 현재 입력하고 있는 단어 영역에 표시를 해준다.
+    */
+   private final JPanel wordBox;
 
    /**
     * 사용자가 입력했던 단어들을 저장, 검색 등 관리해주는 매니저
@@ -130,7 +136,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.wordBox = new JPanel();
       this.wordBox.setVisible(false);
       this.wordBox.setOpaque(false);
-      this.wordBox.setBorder(new LineBorder(Color.RED, 2));
+      this.wordBox.setBorder(new LineBorder(Color.RED, 1));
    }
 
    /**
@@ -155,6 +161,11 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.editor = textPane;
       this.editor.addKeyListener(this);
       this.editor.addInputMethodListener(this);
+      this.editor.addCaretListener((e) -> {
+         System.out.println("caretPositionChanged: " + e.getDot());
+         System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
+               + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
+      });
       this.editor.add(this.popupBox);
       this.editor.add(this.wordBox);
    }
@@ -165,6 +176,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    @Override
    public void inputMethodTextChanged(InputMethodEvent event) {
       // System.out.println(event.paramString());
+      this.setCaretPos(this.editor.getCaretPosition()); // 일단 에디터의 캐럿 위치와 일치시킴
       AttributedCharacterIterator str = event.getText();
 
       System.out.println("IME Event Occur!");
@@ -180,10 +192,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             this.initUncommittedBuffer();
             System.out.println("uncommitted : " + this.uncommBuf);
          }
-         System.out.println(this.logString() + "\n----\n");
+         System.out.println(this.logString());
       } else {
          this.initUncommittedBuffer();
-         System.out.println("it's null!\n----\n");
+         System.out.println("it's null! \n");
       }
 
       if (this.isShowingInputAssist()) {
@@ -194,9 +206,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    @Override
    public void keyPressed(KeyEvent e) {
-      // System.out.println(e.paramString());
       char ch = e.getKeyChar();
       int code = e.getKeyCode();
+      this.setCaretPos(this.editor.getCaretPosition()); // 일단 에디터의 캐럿 위치와 일치시킴
 
       if (this.processCharacterKeys(ch)) {
          if (this.isShowingInputAssist()) {
@@ -228,9 +240,20 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                this.hideInputAssist();
                break;
 
+            case KeyEvent.VK_TAB:
+               // TODO 현재 선택된 단어를 replace한다!
+               // 카운트도 증가시킨다!
+               break;
+
+            case KeyEvent.VK_SHIFT:
+            case KeyEvent.VK_CONTROL:
+            case KeyEvent.VK_ALT:
+               // 아무것도 안 한다. default로 가기 전 최후의 필터링.
+               break;
+
             default:
-               // 기타 엉뚱한 키가 들어오면 팝업박스를 가린다.
-               this.hideInputAssist();
+               this.hideInputAssist(); // 기타 엉뚱한 키가 들어오면 팝업박스를 가린다.
+               System.out.println(e.paramString()); // 뭐가 들어왔는지 확인은 해야지
          }
       }
 
@@ -253,11 +276,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    public String logString() {
       StringBuffer logStr = new StringBuffer();
+      logStr.append("-----------------------------------------\n");
+      logStr.append(" logString() \n");
+      logStr.append("-----------------------------------------\n");
       logStr.append("  commBuf: \"" + this.commBuf.toString() + "\"\n");
       logStr.append("uncommBuf: \"" + this.uncommBuf.toString() + "\"\n");
       logStr.append("wordToSearch: \"" + this.getWordToSearch() + "\"\n");
       logStr.append("length: " + this.getWordToSearch().length() + "\n");
       logStr.append("buf caret pos: " + this.commBufPos + "\n");
+      logStr.append("-----------------------------------------\n");
       if (this.getWordToSearch().length() > 0)
          return logStr.toString();
       return "";
@@ -274,6 +301,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       else {
          this.commBuf.insert(this.commBufPos, ch);
          this.commBufPos++;
+         this.setCaretPos(this.getCaretPos() + 1);
       }
    }
 
@@ -288,6 +316,13 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
+    * @return the caretPos
+    */
+   private int getCaretPos() {
+      return this.caretPos;
+   }
+
+   /**
     * 자동완성 단어 검색에 사용 될 단어를 완성글자 버퍼를 가져오거나 조립글자 버퍼까지 합쳐서 가져온다.
     *
     * @return 자동완성 검색에 사용 될 단어
@@ -297,7 +332,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          return this.commBuf.toString() + this.uncommBuf.toString();
       return this.commBuf.toString();
    }
-
 
    /**
     * 팝업박스와 워드박스를 보이지 않게 한다.
@@ -341,7 +375,12 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       boolean isConsumed = false;
       if (keyCode == KeyEvent.VK_LEFT) {
          System.out.println("left key pressed!");
+         this.setCaretPos(this.getCaretPos() - 1);
          this.commBufPos--;
+         if (this.commBufPos < 0) {
+            this.initWordBuffers();
+            this.hideInputAssist();
+         }
          isConsumed = true;
       } else if (keyCode == KeyEvent.VK_RIGHT) {
          System.out.println("right key pressed!");
@@ -350,6 +389,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             this.initWordBuffers();
             this.hideInputAssist();
          } else {
+            this.setCaretPos(this.getCaretPos() + 1);
             this.commBufPos++;
          }
          isConsumed = true;
@@ -388,7 +428,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void refreshPopupLocation() {
       try {
-         Rectangle anchor = this.editor.modelToView(this.editor.getCaretPosition());
+         Rectangle anchor = this.editor.modelToView(this.getCaretPos());
          this.popupBox.setLocation(anchor.x, anchor.y + anchor.height);
       } catch (BadLocationException e) {
          e.printStackTrace();
@@ -402,22 +442,31 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       // 현재 문단의 폰트 속성 조사
       AttributeSet attrSet = this.editor.getParagraphAttributes();
       String fontFamily = StyleConstants.getFontFamily(attrSet);
-      int fontStyle = StyleConstants.isBold(attrSet) ? Font.BOLD : Font.PLAIN;
-      fontStyle |= StyleConstants.isItalic(attrSet) ? Font.ITALIC : Font.PLAIN;
+      int fontStyle = (StyleConstants.isBold(attrSet) ? Font.BOLD : Font.PLAIN)
+            | (StyleConstants.isItalic(attrSet) ? Font.ITALIC : Font.PLAIN);
       int fontSize = StyleConstants.getFontSize(attrSet);
 
       // 조사된 속성으로 폰트 객체를 만들고, 입력단어의 길이를 측정함
       Font font = new Font(fontFamily, fontStyle, fontSize);
-      int width = this.editor.getFontMetrics(font).stringWidth(this.commBuf.toString());
-      // if (this.uncommBuf.toString().compareTo("") != 0)
-      // width += this.editor.getFontMetrics(font).stringWidth(this.uncommBuf.toString());
+      FontMetrics metric = this.editor.getFontMetrics(font);
+      String wordToSearch = this.getWordToSearch();
+      int widthAll = metric.stringWidth(wordToSearch);
+      int widthAfterCaret = 0;
+      if (!wordToSearch.isEmpty() && wordToSearch.length() != this.commBufPos) {
+         String endStr = wordToSearch.substring(this.commBufPos);
+         widthAfterCaret = metric.stringWidth(endStr);
+         System.out.println("endStr: \"" + endStr + "\"");
+      }
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
       try {
-         Rectangle rect = this.editor.modelToView(this.editor.getCaretPosition());
-         System.out.println("x: " + rect.x + ", width: " + width);
-         rect.translate(-width, 0);
-         rect.setSize(width, rect.height);
+         // System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
+         // + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
+         Rectangle rect = this.editor.modelToView(this.getCaretPos());
+         System.out.println("x: " + rect.x + ", widthAll: " + widthAll + ", widthAfterCaret: "
+               + widthAfterCaret);
+         rect.translate(-(widthAll - widthAfterCaret), 0);
+         rect.setSize(widthAll, rect.height);
          this.wordBox.setBounds(rect);
       } catch (BadLocationException e) {
          e.printStackTrace();
@@ -430,6 +479,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshWordList() {
       Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
       this.popupList.setListData(matchings);
+   }
+
+   /**
+    * @param caretPos the caretPos to set
+    */
+   private void setCaretPos(int caretPos) {
+      if (caretPos >= 0 && caretPos <= this.editor.getText().length())
+         this.caretPos = caretPos;
    }
 
    /**
