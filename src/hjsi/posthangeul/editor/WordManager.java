@@ -68,7 +68,10 @@ public class WordManager {
          /*
           * TODO 여기에 검색 알고리즘을 넣어야함!! 초성 검색이나, 단어 일부를 포함하는 경우 등을 포함하는 검색 알고리즘
           */
-         if (str.contains(inputWord) || str.startsWith(inputWord) || (inputWord.length() == 0))
+    	 if (str.length() < inputWord.length())
+    		 continue;
+    
+    	 else if (str.contains(inputWord) || str.startsWith(inputWord) || (inputWord.length() == 0))
             matchingWords.add(str);
 
          // 초성을 포함하는지
