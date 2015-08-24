@@ -1,6 +1,7 @@
 package hjsi.posthangeul.editor;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
@@ -10,55 +11,71 @@ import java.text.AttributedCharacterIterator;
 import java.util.Vector;
 
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.StyleConstants;
 
 
 
-public class AutoComplete extends JScrollPane implements KeyListener, InputMethodListener {
-   private static final long serialVersionUID = 4592225249925286812L;
+public class AutoComplete implements KeyListener, InputMethodListener {
+   /**
+    * 조립이 끝나 완성된 한글 버퍼
+    */
+   private StringBuffer commBuf;
+   /**
+    * 완성된 한글 버퍼의 가상 캐럿 위치
+    */
+   private int commBufPos;
+   private JTextPane editor;
 
+   private JScrollPane popupBox;
+   private JList<String> popupList;
    /**
     * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
     */
    private StringBuffer uncommBuf;
    /**
-    * 조립이 끝나 완성된 한글 버퍼
+    * 현재 입력하고 있는 단어 영역에 표시를 해준다.
     */
-   private StringBuffer commBuf;
-   private int commBufPos;
+   private final JPanel wordBox;
+   private final WordManager wordManager = new WordManager();
 
-   private JTextPane editor;
-   private JList<String> listView;
-
-   private WordManager wordManager = new WordManager();
+   {
+      wordBox = new JPanel();
+      wordBox.setVisible(false);
+      wordBox.setOpaque(false);
+      wordBox.setBorder(new LineBorder(Color.RED, 2));
+   }
 
    public AutoComplete(JTextPane textPane) {
+      /* 기타 객체 생성 */
+      initWordBuffers();
+
+      /* scrollpane 내부 리스트뷰 설정 */
+      popupList = new JList<String>();
+      popupList.setVisible(true);
+
+      /* scrollpane 설정 */
+      popupBox = new JScrollPane(popupList);
+      popupBox.setVisible(false);
+      popupBox.setOpaque(true);
+      popupBox.setSize(100, 280);
+      popupBox.setBackground(Color.WHITE);
+      System.out.println(popupBox.getInsets().toString());
+      EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
+      popupBox.setBorder(outer);
+      System.out.println(popupBox.getInsets().toString());
+
       editor = textPane;
       editor.addKeyListener(this);
       editor.addInputMethodListener(this);
-      editor.add(this);
-
-      /* scrollpane 설정 */
-      setVisible(false);
-      setOpaque(true);
-      setSize(100, 280);
-      setBackground(Color.WHITE);
-      System.out.println(getInsets().toString());
-      EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
-      setBorder(outer);
-      System.out.println(getInsets().toString());
-
-      /* scrollpane 내부 리스트뷰 설정 */
-      listView = new JList<String>();
-      listView.setSize(getSize());
-      listView.setVisible(true);
-      getViewport().add(listView);
-
-      /* 기타 객체 생성 */
-      initWordBuffers();
+      editor.add(popupBox);
+      editor.add(wordBox);
    }
 
    @Override
@@ -88,26 +105,11 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
          System.out.println("it's null!\n----\n");
       }
 
-      if (isShowing())
+      if (popupBox.isShowing())
          updatePopup();
       else
          showPopup();
-   }
-
-   /**
-    * 방향키를 입력 받으면 버퍼의 캐럿을 해당 방향키에 맞게 처리한다.
-    * 
-    * @param keyCode
-    */
-   private void processArrowKeys(int keyCode) {
-
-   }
-
-   /**
-    * 현재 입력하고 있는 단어 영역에 표시를 해준다. 단어가 DB에 저장되거나 ESC 키 입력 등으로 취소되어 표시가 사라지는 것도 이 함수에서 처리한다.
-    */
-   private void drawWordRect() {
-
+      showWordBox();
    }
 
    @Override
@@ -118,8 +120,8 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
 
       switch (code) {
          case KeyEvent.VK_ESCAPE:
-            if (isShowing())
-               setVisible(false);
+            if (popupBox.isShowing())
+               popupBox.setVisible(false);
             else
                initWordBuffers();
             break;
@@ -133,6 +135,7 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
             if (getWordToSearch().length() == commBufPos) {
                wordManager.countWord(getWordToSearch());
                initWordBuffers();
+               popupBox.setVisible(false);
             } else {
                commBufPos++;
             }
@@ -144,7 +147,7 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
 
          case KeyEvent.VK_ENTER:
          case KeyEvent.VK_SPACE:
-            setVisible(false);
+            popupBox.setVisible(false);
             wordManager.countWord(commBuf.toString());
             initWordBuffers();
             break;
@@ -154,26 +157,27 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
                // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
             } else if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
                appendCommitted(ch);
-               if (isShowing() == false) {
+               if (popupBox.isShowing() == false) {
                   showPopup();
                }
             } else {
-               setVisible(false);
+               popupBox.setVisible(false);
             }
       }
 
-      if (isShowing())
+      if (popupBox.isShowing())
          updatePopup();
 
       if (code != KeyEvent.VK_ENTER && code != KeyEvent.VK_SPACE)
          System.out.println(logString());
+
+      editor.invalidate();
    }
 
    @Override
    public void keyReleased(KeyEvent e) {
       // System.out.println(e.paramString());
    }
-
 
    @Override
    public void keyTyped(KeyEvent e) {
@@ -193,25 +197,13 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
          return "";
    }
 
-   public void showPopup() {
-      try {
-         updatePopup();
-         refreshPopupLocation();
-         setVisible(true);
-      } catch (BadLocationException e1) {
-         e1.printStackTrace();
-      }
-   }
-
-
-   public void updatePopup() {
-      Vector<String> matchings = wordManager.getMatchingWords(getWordToSearch());
-      listView.setListData(matchings);
-   }
-
    private void appendCommitted(char ch) {
-      commBuf.insert(commBufPos, ch);
-      commBufPos++;
+      if (commBufPos > commBuf.length())
+         commBuf.append(ch);
+      else {
+         commBuf.insert(commBufPos, ch);
+         commBufPos++;
+      }
    }
 
    private void backspaceCommitted() {
@@ -219,6 +211,25 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
          commBuf.delete(commBufPos - 1, commBufPos);
          commBufPos--;
       }
+   }
+
+   private Rectangle getWordBoxBounds() throws BadLocationException {
+      // 현재 문단의 폰트 속성 조사
+      AttributeSet attrSet = editor.getParagraphAttributes();
+      String fontFamily = StyleConstants.getFontFamily(attrSet);
+      int fontStyle = StyleConstants.isBold(attrSet) ? Font.BOLD : Font.PLAIN;
+      fontStyle |= StyleConstants.isItalic(attrSet) ? Font.ITALIC : Font.PLAIN;
+      int fontSize = StyleConstants.getFontSize(attrSet);
+
+      // 조사된 속성으로 폰트 객체를 만들고, 입력단어의 길이를 측정함
+      Font font = new Font(fontFamily, fontStyle, fontSize);
+      int width = editor.getFontMetrics(font).stringWidth(getWordToSearch());
+
+      // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
+      Rectangle rect = editor.modelToView(editor.getCaretPosition());
+      rect.translate(-width, 0);
+      rect.setSize(width, rect.height);
+      return rect;
    }
 
    private String getWordToSearch() {
@@ -278,9 +289,43 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
       return true;
    }
 
+   /**
+    * 방향키를 입력 받으면 버퍼의 캐럿을 해당 방향키에 맞게 처리한다.
+    * 
+    * @param keyCode
+    */
+   private void processArrowKeys(int keyCode) {
+
+   }
+
    private void refreshPopupLocation() throws BadLocationException {
       Rectangle anchor = editor.modelToView(editor.getCaretPosition());
-      setLocation(anchor.x, anchor.y + anchor.height);
+      popupBox.setLocation(anchor.x, anchor.y + anchor.height);
+   }
+
+   private void showPopup() {
+      try {
+         updatePopup();
+         refreshPopupLocation();
+         popupBox.setVisible(true);
+      } catch (BadLocationException e1) {
+         e1.printStackTrace();
+      }
+   }
+
+   private void showWordBox() {
+      try {
+         wordBox.setBounds(getWordBoxBounds());
+         wordBox.setVisible(true);
+      } catch (BadLocationException e) {
+         wordBox.setVisible(false);
+         e.printStackTrace();
+      }
+   }
+
+   private void updatePopup() {
+      Vector<String> matchings = wordManager.getMatchingWords(getWordToSearch());
+      popupList.setListData(matchings);
    }
 
    private void updateUncommitted(char ch) {
