@@ -72,12 +72,15 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
       System.out.println("IME Event Occur!");
       if (str != null) {
          if (event.getCommittedCharacterCount() > 0) {
-            System.out.println("committed : " + str.first());
             appendCommitted(str.first());
             initUncommittedBuffer();
-         } else {
-            System.out.println("uncommitted : " + str.last());
+            System.out.println("committed : " + commBuf.charAt(commBufPos - 1));
+         } else if (str.getEndIndex() > 0) {
             updateUncommitted(str.last());
+            System.out.println("uncommitted : " + uncommBuf);
+         } else {
+            initUncommittedBuffer();
+            System.out.println("uncommitted : " + uncommBuf);
          }
          System.out.println(logString() + "\n----\n");
       } else {
@@ -87,6 +90,8 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
 
       if (isShowing())
          updatePopup();
+      else
+         showPopup();
    }
 
    /**
@@ -217,7 +222,10 @@ public class AutoComplete extends JScrollPane implements KeyListener, InputMetho
    }
 
    private String getWordToSearch() {
-      return commBuf.toString() + uncommBuf.toString();
+      if (uncommBuf.length() > 0)
+         return commBuf.toString() + uncommBuf.toString();
+      else
+         return commBuf.toString();
    }
 
    private void initUncommittedBuffer() {
