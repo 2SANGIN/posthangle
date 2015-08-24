@@ -20,7 +20,7 @@ public class FontBoldAction extends StyledEditorKit.StyledTextAction {
    private static final long serialVersionUID = 9174670038684056758L;
 
    /**
-    * 글꼴 강조 효과를 적용하는 액션
+    * 글꼴 강조 효과를 적용하는 액션 객체 생성
     */
    public FontBoldAction() {
       super("font-bold"); //$NON-NLS-1$

@@ -6,15 +6,19 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 public class WordManager {
-   private Map<String, Integer> wordCounter;
-   private Map<String, Vector<String>> historyTop10;
    private Map<String, String> historyLast;
-
+   private Map<String, Vector<String>> historyTop10;
+   /**
+    * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
+    */
    private final Comparator<String> wordComparator =
-         (o1, o2) -> WordManager.this.wordCounter.get(o2) - WordManager.this.wordCounter.get(o1);
+         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
+               - this.getWordCounter().get(o1).intValue());
+
+   private Map<String, Integer> wordCounter;
 
    public WordManager() {
-      this.wordCounter = new TreeMap<String, Integer>();
+      this.setWordCounter(new TreeMap<String, Integer>());
       this.historyTop10 = new TreeMap<String, Vector<String>>();
       this.historyLast = new TreeMap<String, String>();
    }
@@ -44,12 +48,12 @@ public class WordManager {
             if (AutoComplete.isKoreanAlphabet(ch))
                return;
 
-         Integer count = wordCounter.get(inputWord);
+         Integer count = this.getWordCounter().get(inputWord);
          if (count != null)
             count++;
          else
             count = 1;
-         this.wordCounter.put(inputWord.toString(), count);
+         this.getWordCounter().put(inputWord.toString(), count);
          System.out.println("Counted Word: \"" + inputWord.toString() + "\", count: " + count);
       }
    }
@@ -60,7 +64,7 @@ public class WordManager {
     */
    public Vector<String> getMatchingWords(String inputWord) {
       Vector<String> matchingWords = new Vector<String>();
-      for (String str : this.wordCounter.keySet()) {
+      for (String str : this.getWordCounter().keySet()) {
          /*
           * TODO 여기에 검색 알고리즘을 넣어야함!! 초성 검색이나, 단어 일부를 포함하는 경우 등을 포함하는 검색 알고리즘
           */
@@ -75,39 +79,54 @@ public class WordManager {
             int index = 0;
             for (char input : inputWord.toCharArray()) {
                if (AutoComplete.isKoreanAlphabet(input)) {
-                  System.out.println("alphabet" + " " + input + ""
+                  System.out.println("alphabet" + ' ' + input + ' '
                         + PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index))));
                   if (input == PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
                      continue;
-                  } else {
-                     matchingWords.remove(str);
-                     break;
                   }
+                  matchingWords.remove(str);
+                  break;
                } else if (AutoComplete.isKorean(input)) {
                   if (PostIME.getInitialChar(PostIME.getInitialIndex(input)) == PostIME
                         .getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
-                     System.out.println(input + " " + str.charAt(index));
+                     System.out.println(input + ' ' + str.charAt(index));
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
                      continue;
-                  } else {
-                     matchingWords.remove(str);
-                     break;
                   }
+                  matchingWords.remove(str);
+                  break;
                }
             }
 
          }
       }
-      matchingWords.sort(this.wordComparator);
+      matchingWords.sort(this.getWordComparator());
       return matchingWords;
    }
 
+   /**
+    * @return wordComparator
+    */
    public Comparator<String> getWordComparator() {
       return this.wordComparator;
+   }
+
+   /**
+    * @return the wordCounter
+    */
+   public Map<String, Integer> getWordCounter() {
+      return this.wordCounter;
+   }
+
+   /**
+    * @param wordCounter the wordCounter to set
+    */
+   public void setWordCounter(Map<String, Integer> wordCounter) {
+      this.wordCounter = wordCounter;
    }
 }

@@ -22,7 +22,16 @@ import javax.swing.text.StyleConstants;
 
 
 
+/**
+ * 단어 자동완성 클래스
+ *
+ * @author SANGIN
+ */
 public class AutoComplete implements KeyListener, InputMethodListener {
+   /**
+    * @param ch 검사할 글자
+    * @return 영문 알파벳 소문자 혹은 대문자라면 true, 아니라면 false
+    */
    public static boolean isEnglish(char ch) {
       return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
    }
@@ -51,9 +60,24 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       return true;
    }
 
+   /**
+    * 해당 글자가 한글 자모에 해당하는지 검사한다.
+    *
+    * @param ch 검사할 글자
+    * @return 자음 혹은 모음이라면 true, 아니라면 false
+    */
    public static boolean isKoreanAlphabet(char ch) {
       if (ch < 0x3131 || 0x318E < ch)
          return false;
+      return true;
+   }
+
+   private static boolean isNumber(CharSequence str) {
+      for (int i = 0; i < str.length(); i++) {
+         char ch = str.charAt(i);
+         if (ch < 0x30 || 0x39 < ch)
+            return false;
+      }
       return true;
    }
 
@@ -61,15 +85,26 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * 조립이 끝나 완성된 한글 버퍼
     */
    private StringBuffer commBuf;
+
    /**
     * 완성된 한글 버퍼의 가상 캐럿 위치
     */
    private int commBufPos;
-   private JTextPane editor;
 
-   private JScrollPane popupBox;
+   /**
+    * 자동완성 기능이 동작하게 될 대상 텍스트 에디터
+    */
+   private final JTextPane editor;
 
-   private JList<String> popupList;
+   /**
+    * 자동완성 단어를 보여줄 스크롤 박스
+    */
+   private final JScrollPane popupBox;
+
+   /**
+    * 자동완성 단어를 보여줄 스크롤 박스 안의 리스트뷰
+    */
+   private final JList<String> popupList;
 
    /**
     * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
@@ -81,6 +116,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private final JPanel wordBox;
 
+   /**
+    * 현재 자동완성 입력도우미가 화면에 보여지고 있는가를 나타낸다.
+    */
+   private boolean visibleInputAssist = false;
+
+   /**
+    * 사용자가 입력했던 단어들을 저장, 검색 등 관리해주는 매니저
+    */
    private final WordManager wordManager = new WordManager();
 
    {
@@ -90,12 +133,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.wordBox.setBorder(new LineBorder(Color.RED, 2));
    }
 
+   /**
+    * @param textPane 자동완성 기능을 이용할 텍스트 에디터
+    */
    public AutoComplete(JTextPane textPane) {
       /* 기타 객체 생성 */
       this.initWordBuffers();
 
       /* scrollpane 내부 리스트뷰 설정 */
-      this.popupList = new JList<String>();
+      this.popupList = new JList<>();
       this.popupList.setVisible(true);
 
       /* scrollpane 설정 */
@@ -104,10 +150,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.popupBox.setOpaque(true);
       this.popupBox.setSize(100, 280);
       this.popupBox.setBackground(Color.WHITE);
-      System.out.println(this.popupBox.getInsets().toString());
-      EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
-      this.popupBox.setBorder(outer);
-      System.out.println(this.popupBox.getInsets().toString());
+      this.popupBox.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
 
       this.editor = textPane;
       this.editor.addKeyListener(this);
@@ -143,11 +186,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          System.out.println("it's null!\n----\n");
       }
 
-      if (this.popupBox.isShowing())
-         this.updatePopup();
-      else
-         this.showPopup();
-      this.showWordBox();
+      if (this.isShowingInputAssist()) {
+         this.refreshInputAssist();
+      } else
+         this.showInputAssist();
    }
 
    @Override
@@ -156,60 +198,44 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       char ch = e.getKeyChar();
       int code = e.getKeyCode();
 
-      switch (code) {
-         case KeyEvent.VK_ESCAPE:
-            if (this.popupBox.isShowing())
-               this.popupBox.setVisible(false);
-            else
+      if (this.processCharacterKeys(ch)) {
+         if (this.isShowingInputAssist()) {
+            this.refreshInputAssist();
+         } else {
+            this.showInputAssist();
+         }
+      } else if (this.processArrowKeys(code)) {
+         if (this.isShowingInputAssist()) {
+            this.refreshInputAssist();
+         }
+      } else {
+         switch (code) {
+            case KeyEvent.VK_ESCAPE:
+               if (this.isShowingInputAssist())
+                  this.hideInputAssist();
+               else
+                  this.initWordBuffers();
+               break;
+
+            case KeyEvent.VK_BACK_SPACE:
+               this.backspaceCommitted();
+               break;
+
+            case KeyEvent.VK_ENTER:
+            case KeyEvent.VK_SPACE:
+               this.wordManager.countWord(this.commBuf.toString());
                this.initWordBuffers();
-            break;
+               this.hideInputAssist();
+               break;
 
-         case KeyEvent.VK_LEFT:
-            this.commBufPos--;
-            break;
-
-         case KeyEvent.VK_RIGHT:
-            System.out.println("right key pressed!");
-            if (this.getWordToSearch().length() == this.commBufPos) {
-               this.wordManager.countWord(this.getWordToSearch());
-               this.initWordBuffers();
-               this.popupBox.setVisible(false);
-            } else {
-               this.commBufPos++;
-            }
-            break;
-
-         case KeyEvent.VK_BACK_SPACE:
-            this.backspaceCommitted();
-            break;
-
-         case KeyEvent.VK_ENTER:
-         case KeyEvent.VK_SPACE:
-            this.popupBox.setVisible(false);
-            this.wordManager.countWord(this.commBuf.toString());
-            this.initWordBuffers();
-            break;
-
-         default:
-            if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E)) {
-               // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
-            } else if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
-               this.appendCommitted(ch);
-               if (this.popupBox.isShowing() == false) {
-                  this.showPopup();
-               }
-            } else {
-               this.popupBox.setVisible(false);
-            }
+            default:
+               // 기타 엉뚱한 키가 들어오면 팝업박스를 가린다.
+               this.hideInputAssist();
+         }
       }
-
-      if (this.popupBox.isShowing())
-         this.updatePopup();
 
       if (code != KeyEvent.VK_ENTER && code != KeyEvent.VK_SPACE)
          System.out.println(this.logString());
-
-      this.editor.invalidate();
    }
 
    @Override
@@ -222,6 +248,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       // System.out.println(e.paramString());
    }
 
+   /**
+    * @return 버퍼에 관련한 로그 문자열
+    */
    public String logString() {
       StringBuffer logStr = new StringBuffer();
       logStr.append("  commBuf: \"" + this.commBuf.toString() + "\"\n");
@@ -231,10 +260,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       logStr.append("buf caret pos: " + this.commBufPos + "\n");
       if (this.getWordToSearch().length() > 0)
          return logStr.toString();
-      else
-         return "";
+      return "";
    }
 
+   /**
+    * 조립 완성된 글자 버퍼에 글자를 추가한다.
+    *
+    * @param ch 추가할 글자
+    */
    private void appendCommitted(char ch) {
       if (this.commBufPos > this.commBuf.length())
          this.commBuf.append(ch);
@@ -244,6 +277,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       }
    }
 
+   /**
+    * 조립 완성된 글자 버퍼에서 현재 commBufPos가 가리키는 위치의 글자를 지운다.
+    */
    private void backspaceCommitted() {
       if (this.commBufPos > 0) {
          this.commBuf.delete(this.commBufPos - 1, this.commBufPos);
@@ -251,7 +287,118 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       }
    }
 
-   private Rectangle getWordBoxBounds() throws BadLocationException {
+   /**
+    * 자동완성 단어 검색에 사용 될 단어를 완성글자 버퍼를 가져오거나 조립글자 버퍼까지 합쳐서 가져온다.
+    *
+    * @return 자동완성 검색에 사용 될 단어
+    */
+   private String getWordToSearch() {
+      if (this.uncommBuf.length() > 0)
+         return this.commBuf.toString() + this.uncommBuf.toString();
+      return this.commBuf.toString();
+   }
+
+
+   /**
+    * 팝업박스와 워드박스를 보이지 않게 한다.
+    */
+   private void hideInputAssist() {
+      this.visibleInputAssist = false;
+      this.popupBox.setVisible(false);
+      this.wordBox.setVisible(false);
+   }
+
+   /**
+    * 조립글자 버퍼를 지우고 새 버퍼를 할당한다.
+    */
+   private void initUncommittedBuffer() {
+      this.uncommBuf = new StringBuffer();
+   }
+
+   /**
+    * 완성글자 버퍼를 지우고 새 버퍼를 할당한다. 완성글자 캐럿 포지션도 초기화하고, 조립글자 버퍼도 초기화한다.
+    */
+   private void initWordBuffers() {
+      this.commBuf = new StringBuffer();
+      this.commBufPos = 0;
+      this.initUncommittedBuffer();
+   }
+
+   /**
+    * @return 현재 입력도우미가 보여지고 있으면 true, 아니라면 false
+    */
+   private boolean isShowingInputAssist() {
+      return this.visibleInputAssist;
+   }
+
+   /**
+    * 방향키를 입력 받으면 버퍼의 캐럿 및 기타 동작을 해당 방향키에 맞게 처리한다.
+    *
+    * @param keyCode 가상 키코드
+    * @return 방향키를 처리했다면 true, 그 이외의 키는 false
+    */
+   private boolean processArrowKeys(int keyCode) {
+      boolean isConsumed = false;
+      if (keyCode == KeyEvent.VK_LEFT) {
+         System.out.println("left key pressed!");
+         this.commBufPos--;
+         isConsumed = true;
+      } else if (keyCode == KeyEvent.VK_RIGHT) {
+         System.out.println("right key pressed!");
+         if (this.getWordToSearch().length() == this.commBufPos) {
+            this.wordManager.countWord(this.getWordToSearch());
+            this.initWordBuffers();
+            this.hideInputAssist();
+         } else {
+            this.commBufPos++;
+         }
+         isConsumed = true;
+      }
+      return isConsumed;
+   }
+
+   /**
+    * 한글이나 알파벳 입력에 대한 처리를 한다.
+    *
+    * @param keyChar 글자 코드 값
+    * @return 한글이나 알파벳에 대한 처리를 했으면 true, 그 이외의 키는 false
+    */
+   private boolean processCharacterKeys(char keyChar) {
+      boolean isConsumed = false;
+      if ((0xAC00 <= keyChar && keyChar <= 0xD7A3) || (0x3131 <= keyChar && keyChar <= 0x318E)) {
+         // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
+         isConsumed = true;
+      } else if ((0x61 <= keyChar && keyChar <= 0x7A) || (0x41 <= keyChar && keyChar <= 0x5A)) {
+         this.appendCommitted(keyChar);
+         isConsumed = true;
+      }
+      return isConsumed;
+   }
+
+   /**
+    * 워드박스의 위치, 크기를 재계산하고 단어 리스트를 다시 가져온다.
+    */
+   private void refreshInputAssist() {
+      this.refreshWordList();
+      this.refreshWordBox();
+   }
+
+   /**
+    * 팝업박스의 위치를 에디터 내의 캐럿 위치를 기준으로 계산한다.
+    */
+   private void refreshPopupLocation() {
+      try {
+         Rectangle anchor = this.editor.modelToView(this.editor.getCaretPosition());
+         this.popupBox.setLocation(anchor.x, anchor.y + anchor.height);
+      } catch (BadLocationException e) {
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * 워드박스의 위치를 에디터 내의 캐럿 위치를 기준으로 계산한다.
+    */
+   private void refreshWordBox() {
       // 현재 문단의 폰트 속성 조사
       AttributeSet attrSet = this.editor.getParagraphAttributes();
       String fontFamily = StyleConstants.getFontFamily(attrSet);
@@ -261,81 +408,48 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       // 조사된 속성으로 폰트 객체를 만들고, 입력단어의 길이를 측정함
       Font font = new Font(fontFamily, fontStyle, fontSize);
-      int width = this.editor.getFontMetrics(font).stringWidth(this.getWordToSearch());
+      int width = this.editor.getFontMetrics(font).stringWidth(this.commBuf.toString());
+      // if (this.uncommBuf.toString().compareTo("") != 0)
+      // width += this.editor.getFontMetrics(font).stringWidth(this.uncommBuf.toString());
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
-      Rectangle rect = this.editor.modelToView(this.editor.getCaretPosition());
-      rect.translate(-width, 0);
-      rect.setSize(width, rect.height);
-      return rect;
-   }
-
-   private String getWordToSearch() {
-      if (this.uncommBuf.length() > 0)
-         return this.commBuf.toString() + this.uncommBuf.toString();
-      else
-         return this.commBuf.toString();
-   }
-
-
-   private void initUncommittedBuffer() {
-      this.uncommBuf = new StringBuffer();
-   }
-
-   private void initWordBuffers() {
-      this.commBuf = new StringBuffer();
-      this.commBufPos = 0;
-      this.initUncommittedBuffer();
-   }
-
-   private boolean isNumber(CharSequence str) {
-      for (int i = 0; i < str.length(); i++) {
-         char ch = str.charAt(i);
-         if (ch < 0x30 || 0x39 < ch)
-            return false;
-      }
-      return true;
-   }
-
-   /**
-    * 방향키를 입력 받으면 버퍼의 캐럿을 해당 방향키에 맞게 처리한다.
-    *
-    * @param keyCode
-    */
-   private void processArrowKeys(int keyCode) {
-
-   }
-
-   private void refreshPopupLocation() throws BadLocationException {
-      Rectangle anchor = this.editor.modelToView(this.editor.getCaretPosition());
-      this.popupBox.setLocation(anchor.x, anchor.y + anchor.height);
-   }
-
-   private void showPopup() {
       try {
-         this.updatePopup();
-         this.refreshPopupLocation();
-         this.popupBox.setVisible(true);
-      } catch (BadLocationException e1) {
-         e1.printStackTrace();
-      }
-   }
-
-   private void showWordBox() {
-      try {
-         this.wordBox.setBounds(this.getWordBoxBounds());
-         this.wordBox.setVisible(true);
+         Rectangle rect = this.editor.modelToView(this.editor.getCaretPosition());
+         System.out.println("x: " + rect.x + ", width: " + width);
+         rect.translate(-width, 0);
+         rect.setSize(width, rect.height);
+         this.wordBox.setBounds(rect);
       } catch (BadLocationException e) {
-         this.wordBox.setVisible(false);
          e.printStackTrace();
       }
    }
 
-   private void updatePopup() {
+   /**
+    * 팝업박스 내에 보여줄 단어 리스트를 현재 입력단어 기준으로 다시 가져온다.
+    */
+   private void refreshWordList() {
       Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
       this.popupList.setListData(matchings);
    }
 
+   /**
+    * 팝업박스와 워드박스를 보여준다. 팝업박스 리스트의 단어를 현재 입력된 단어 기준으로 다시 가져오고 위치를 재계산해서 에디터 내에 보여준다. 워드박스 또한 입력된 단어를
+    * 감싸는 사각형 영역을 재계산해서 보여준다.
+    */
+   private void showInputAssist() {
+      this.visibleInputAssist = true;
+      this.refreshWordList();
+      this.refreshPopupLocation();
+      this.popupBox.setVisible(true);
+      this.refreshWordBox();
+      this.wordBox.setVisible(true);
+   }
+
+   /**
+    * 자바 IME로부터 조립 글자를 받아서 조립글자 버퍼에 덮어쓴다.
+    *
+    * @param ch IME에서 조립 중인 글자
+    */
    private void updateUncommitted(char ch) {
       if (this.uncommBuf.length() > 0)
          this.uncommBuf.setCharAt(0, ch);
