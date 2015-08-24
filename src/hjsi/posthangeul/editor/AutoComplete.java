@@ -3,6 +3,7 @@ package hjsi.posthangeul.editor;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
@@ -161,11 +162,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.editor = textPane;
       this.editor.addKeyListener(this);
       this.editor.addInputMethodListener(this);
-      this.editor.addCaretListener((e) -> {
-         System.out.println("caretPositionChanged: " + e.getDot());
-         System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
-               + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
-      });
       this.editor.add(this.popupBox);
       this.editor.add(this.wordBox);
    }
@@ -460,9 +456,19 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
       try {
-         // System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
-         // + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
-         Rectangle rect = this.editor.modelToView(this.getCaretPos());
+         System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
+               + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
+         System.out
+               .println("magic caret: " + this.editor.getCaret().getMagicCaretPosition() + " \n");
+         Rectangle rect;
+         Point pos = this.editor.getCaret().getMagicCaretPosition();
+         if (pos != null) {
+            rect = new Rectangle(pos.x, pos.y, 0, 20);
+         } else {
+            if (false)
+               rect = this.editor.modelToView(this.getCaretPos());
+            rect = new Rectangle(0, 0, 0, 0);
+         }
          System.out.println("x: " + rect.x + ", widthAll: " + widthAll + ", widthAfterCaret: "
                + widthAfterCaret);
          rect.translate(-(widthAll - widthAfterCaret), 0);
