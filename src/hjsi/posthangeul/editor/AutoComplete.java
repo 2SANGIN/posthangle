@@ -35,11 +35,11 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    private JScrollPane popupBox;
    private JList<String> popupList;
-   /**
-    * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
-    */
-   private StringBuffer uncommBuf;
-   /**
+  /**
+   * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
+   */
+  private StringBuffer uncommBuf;
+  /**
     * 현재 입력하고 있는 단어 영역에 표시를 해준다.
     */
    private final JPanel wordBox;
@@ -52,7 +52,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       wordBox.setBorder(new LineBorder(Color.RED, 2));
    }
 
-   public AutoComplete(JTextPane textPane) {
+  public AutoComplete(JTextPane textPane) {
       /* 기타 객체 생성 */
       initWordBuffers();
 
@@ -60,14 +60,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       popupList = new JList<String>();
       popupList.setVisible(true);
 
-      /* scrollpane 설정 */
+    /* scrollpane 설정 */
       popupBox = new JScrollPane(popupList);
       popupBox.setVisible(false);
       popupBox.setOpaque(true);
       popupBox.setSize(100, 280);
       popupBox.setBackground(Color.WHITE);
       System.out.println(popupBox.getInsets().toString());
-      EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
+    EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
       popupBox.setBorder(outer);
       System.out.println(popupBox.getInsets().toString());
 
@@ -76,39 +76,39 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       editor.addInputMethodListener(this);
       editor.add(popupBox);
       editor.add(wordBox);
-   }
+  }
 
-   @Override
-   public void caretPositionChanged(InputMethodEvent event) {}
+  @Override
+  public void caretPositionChanged(InputMethodEvent event) {}
 
-   @Override
-   public void inputMethodTextChanged(InputMethodEvent event) {
-      // System.out.println(event.paramString());
-      AttributedCharacterIterator str = event.getText();
+  @Override
+  public void inputMethodTextChanged(InputMethodEvent event) {
+    // System.out.println(event.paramString());
+    AttributedCharacterIterator str = event.getText();
 
-      System.out.println("IME Event Occur!");
-      if (str != null) {
-         if (event.getCommittedCharacterCount() > 0) {
-            appendCommitted(str.first());
-            initUncommittedBuffer();
-            System.out.println("committed : " + commBuf.charAt(commBufPos - 1));
-         } else if (str.getEndIndex() > 0) {
-            updateUncommitted(str.last());
-            System.out.println("uncommitted : " + uncommBuf);
-         } else {
-            initUncommittedBuffer();
-            System.out.println("uncommitted : " + uncommBuf);
-         }
-         System.out.println(logString() + "\n----\n");
+    System.out.println("IME Event Occur!");
+    if (str != null) {
+      if (event.getCommittedCharacterCount() > 0) {
+        appendCommitted(str.first());
+        initUncommittedBuffer();
+        System.out.println("committed : " + commBuf.charAt(commBufPos - 1));
+      } else if (str.getEndIndex() > 0) {
+        updateUncommitted(str.last());
+        System.out.println("uncommitted : " + uncommBuf);
       } else {
-         initUncommittedBuffer();
-         System.out.println("it's null!\n----\n");
+        initUncommittedBuffer();
+        System.out.println("uncommitted : " + uncommBuf);
       }
+      System.out.println(logString() + "\n----\n");
+    } else {
+      initUncommittedBuffer();
+      System.out.println("it's null!\n----\n");
+    }
 
       if (popupBox.isShowing())
-         updatePopup();
-      else
-         showPopup();
+      updatePopup();
+    else
+      showPopup();
       showWordBox();
    }
 
@@ -249,45 +249,49 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       initUncommittedBuffer();
    }
 
-   private boolean isEnglish(char ch) {
-      return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
-   }
+  public static boolean isEnglish(char ch) {
+    return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
+  }
 
-   private boolean isEnglish(CharSequence str) {
-      for (int i = 0; i < str.length(); i++) {
-         char ch = str.charAt(i);
-         if (!isEnglish(ch))
-            return false;
-      }
-      return true;
-   }
+  public static boolean isEnglish(CharSequence str) {
+    for (int i = 0; i < str.length(); i++) {
+      char ch = str.charAt(i);
+      if (!isEnglish(ch))
+        return false;
+    }
+    return true;
+  }
 
-   private boolean isKorean(CharSequence str) {
-      for (int i = 0; i < str.length(); i++) {
-         char ch = str.charAt(i);
-         if (ch < 0xAC00 || 0xD7A3 < ch)
-            return false;
-      }
-      return true;
-   }
+  public static boolean isKorean(CharSequence str) {
+    for (int i = 0; i < str.length(); i++) {
+      char ch = str.charAt(i);
+      if (ch < 0xAC00 || 0xD7A3 < ch)
+        return false;
+    }
+    return true;
+  }
 
-   private boolean isKoreanAlphabet(CharSequence str) {
-      for (int i = 0; i < str.length(); i++) {
-         char ch = str.charAt(i);
-         if (ch < 0x3131 || 0x318E < ch)
-            return false;
-      }
-      return true;
-   }
 
-   private boolean isNumber(CharSequence str) {
-      for (int i = 0; i < str.length(); i++) {
-         char ch = str.charAt(i);
-         if (ch < 0x30 || 0x39 < ch)
-            return false;
-      }
-      return true;
-   }
+  public static boolean isKorean(char ch) {
+    if (ch < 0xAC00 || 0xD7A3 < ch)
+      return false;
+    return true;
+  }
+
+  public static boolean isKoreanAlphabet(char ch) {
+    if (ch < 0x3131 || 0x318E < ch)
+      return false;
+    return true;
+  }
+
+  private boolean isNumber(CharSequence str) {
+    for (int i = 0; i < str.length(); i++) {
+      char ch = str.charAt(i);
+      if (ch < 0x30 || 0x39 < ch)
+        return false;
+    }
+    return true;
+  }
 
    /**
     * 방향키를 입력 받으면 버퍼의 캐럿을 해당 방향키에 맞게 처리한다.
@@ -300,6 +304,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    private void refreshPopupLocation() throws BadLocationException {
       Rectangle anchor = editor.modelToView(editor.getCaretPosition());
+    setLocation(anchor.x, anchor.y + anchor.height);
       popupBox.setLocation(anchor.x, anchor.y + anchor.height);
    }
 
