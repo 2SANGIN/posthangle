@@ -23,6 +23,40 @@ import javax.swing.text.StyleConstants;
 
 
 public class AutoComplete implements KeyListener, InputMethodListener {
+   public static boolean isEnglish(char ch) {
+      return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
+   }
+
+   public static boolean isEnglish(CharSequence str) {
+      for (int i = 0; i < str.length(); i++) {
+         char ch = str.charAt(i);
+         if (!isEnglish(ch))
+            return false;
+      }
+      return true;
+   }
+
+   public static boolean isKorean(char ch) {
+      if (ch < 0xAC00 || 0xD7A3 < ch)
+         return false;
+      return true;
+   }
+
+   public static boolean isKorean(CharSequence str) {
+      for (int i = 0; i < str.length(); i++) {
+         char ch = str.charAt(i);
+         if (ch < 0xAC00 || 0xD7A3 < ch)
+            return false;
+      }
+      return true;
+   }
+
+   public static boolean isKoreanAlphabet(char ch) {
+      if (ch < 0x3131 || 0x318E < ch)
+         return false;
+      return true;
+   }
+
    /**
     * 조립이 끝나 완성된 한글 버퍼
     */
@@ -34,82 +68,86 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private JTextPane editor;
 
    private JScrollPane popupBox;
+
    private JList<String> popupList;
-  /**
-   * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
-   */
-  private StringBuffer uncommBuf;
-  /**
+
+   /**
+    * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
+    */
+   private StringBuffer uncommBuf;
+
+   /**
     * 현재 입력하고 있는 단어 영역에 표시를 해준다.
     */
    private final JPanel wordBox;
+
    private final WordManager wordManager = new WordManager();
 
    {
-      wordBox = new JPanel();
-      wordBox.setVisible(false);
-      wordBox.setOpaque(false);
-      wordBox.setBorder(new LineBorder(Color.RED, 2));
+      this.wordBox = new JPanel();
+      this.wordBox.setVisible(false);
+      this.wordBox.setOpaque(false);
+      this.wordBox.setBorder(new LineBorder(Color.RED, 2));
    }
 
-  public AutoComplete(JTextPane textPane) {
+   public AutoComplete(JTextPane textPane) {
       /* 기타 객체 생성 */
-      initWordBuffers();
+      this.initWordBuffers();
 
       /* scrollpane 내부 리스트뷰 설정 */
-      popupList = new JList<String>();
-      popupList.setVisible(true);
+      this.popupList = new JList<String>();
+      this.popupList.setVisible(true);
 
-    /* scrollpane 설정 */
-      popupBox = new JScrollPane(popupList);
-      popupBox.setVisible(false);
-      popupBox.setOpaque(true);
-      popupBox.setSize(100, 280);
-      popupBox.setBackground(Color.WHITE);
-      System.out.println(popupBox.getInsets().toString());
-    EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
-      popupBox.setBorder(outer);
-      System.out.println(popupBox.getInsets().toString());
+      /* scrollpane 설정 */
+      this.popupBox = new JScrollPane(this.popupList);
+      this.popupBox.setVisible(false);
+      this.popupBox.setOpaque(true);
+      this.popupBox.setSize(100, 280);
+      this.popupBox.setBackground(Color.WHITE);
+      System.out.println(this.popupBox.getInsets().toString());
+      EtchedBorder outer = new EtchedBorder(EtchedBorder.LOWERED);
+      this.popupBox.setBorder(outer);
+      System.out.println(this.popupBox.getInsets().toString());
 
-      editor = textPane;
-      editor.addKeyListener(this);
-      editor.addInputMethodListener(this);
-      editor.add(popupBox);
-      editor.add(wordBox);
-  }
+      this.editor = textPane;
+      this.editor.addKeyListener(this);
+      this.editor.addInputMethodListener(this);
+      this.editor.add(this.popupBox);
+      this.editor.add(this.wordBox);
+   }
 
-  @Override
-  public void caretPositionChanged(InputMethodEvent event) {}
+   @Override
+   public void caretPositionChanged(InputMethodEvent event) {}
 
-  @Override
-  public void inputMethodTextChanged(InputMethodEvent event) {
-    // System.out.println(event.paramString());
-    AttributedCharacterIterator str = event.getText();
+   @Override
+   public void inputMethodTextChanged(InputMethodEvent event) {
+      // System.out.println(event.paramString());
+      AttributedCharacterIterator str = event.getText();
 
-    System.out.println("IME Event Occur!");
-    if (str != null) {
-      if (event.getCommittedCharacterCount() > 0) {
-        appendCommitted(str.first());
-        initUncommittedBuffer();
-        System.out.println("committed : " + commBuf.charAt(commBufPos - 1));
-      } else if (str.getEndIndex() > 0) {
-        updateUncommitted(str.last());
-        System.out.println("uncommitted : " + uncommBuf);
+      System.out.println("IME Event Occur!");
+      if (str != null) {
+         if (event.getCommittedCharacterCount() > 0) {
+            this.appendCommitted(str.first());
+            this.initUncommittedBuffer();
+            System.out.println("committed : " + this.commBuf.charAt(this.commBufPos - 1));
+         } else if (str.getEndIndex() > 0) {
+            this.updateUncommitted(str.last());
+            System.out.println("uncommitted : " + this.uncommBuf);
+         } else {
+            this.initUncommittedBuffer();
+            System.out.println("uncommitted : " + this.uncommBuf);
+         }
+         System.out.println(this.logString() + "\n----\n");
       } else {
-        initUncommittedBuffer();
-        System.out.println("uncommitted : " + uncommBuf);
+         this.initUncommittedBuffer();
+         System.out.println("it's null!\n----\n");
       }
-      System.out.println(logString() + "\n----\n");
-    } else {
-      initUncommittedBuffer();
-      System.out.println("it's null!\n----\n");
-    }
 
-      if (popupBox.isShowing())
-      updatePopup();
-    else
-      showPopup();
-      showWordBox();
+      if (this.popupBox.isShowing())
+         this.updatePopup();
+      else
+         this.showPopup();
+      this.showWordBox();
    }
 
    @Override
@@ -120,58 +158,58 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       switch (code) {
          case KeyEvent.VK_ESCAPE:
-            if (popupBox.isShowing())
-               popupBox.setVisible(false);
+            if (this.popupBox.isShowing())
+               this.popupBox.setVisible(false);
             else
-               initWordBuffers();
+               this.initWordBuffers();
             break;
 
          case KeyEvent.VK_LEFT:
-            commBufPos--;
+            this.commBufPos--;
             break;
 
          case KeyEvent.VK_RIGHT:
             System.out.println("right key pressed!");
-            if (getWordToSearch().length() == commBufPos) {
-               wordManager.countWord(getWordToSearch());
-               initWordBuffers();
-               popupBox.setVisible(false);
+            if (this.getWordToSearch().length() == this.commBufPos) {
+               this.wordManager.countWord(this.getWordToSearch());
+               this.initWordBuffers();
+               this.popupBox.setVisible(false);
             } else {
-               commBufPos++;
+               this.commBufPos++;
             }
             break;
 
          case KeyEvent.VK_BACK_SPACE:
-            backspaceCommitted();
+            this.backspaceCommitted();
             break;
 
          case KeyEvent.VK_ENTER:
          case KeyEvent.VK_SPACE:
-            popupBox.setVisible(false);
-            wordManager.countWord(commBuf.toString());
-            initWordBuffers();
+            this.popupBox.setVisible(false);
+            this.wordManager.countWord(this.commBuf.toString());
+            this.initWordBuffers();
             break;
 
          default:
             if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E)) {
                // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
             } else if ((0x61 <= ch && ch <= 0x7A) || (0x41 <= ch && ch <= 0x5A)) {
-               appendCommitted(ch);
-               if (popupBox.isShowing() == false) {
-                  showPopup();
+               this.appendCommitted(ch);
+               if (this.popupBox.isShowing() == false) {
+                  this.showPopup();
                }
             } else {
-               popupBox.setVisible(false);
+               this.popupBox.setVisible(false);
             }
       }
 
-      if (popupBox.isShowing())
-         updatePopup();
+      if (this.popupBox.isShowing())
+         this.updatePopup();
 
       if (code != KeyEvent.VK_ENTER && code != KeyEvent.VK_SPACE)
-         System.out.println(logString());
+         System.out.println(this.logString());
 
-      editor.invalidate();
+      this.editor.invalidate();
    }
 
    @Override
@@ -186,36 +224,36 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    public String logString() {
       StringBuffer logStr = new StringBuffer();
-      logStr.append("  commBuf: \"" + commBuf.toString() + "\"\n");
-      logStr.append("uncommBuf: \"" + uncommBuf.toString() + "\"\n");
-      logStr.append("wordToSearch: \"" + getWordToSearch() + "\"\n");
-      logStr.append("length: " + getWordToSearch().length() + "\n");
-      logStr.append("buf caret pos: " + commBufPos + "\n");
-      if (getWordToSearch().length() > 0)
+      logStr.append("  commBuf: \"" + this.commBuf.toString() + "\"\n");
+      logStr.append("uncommBuf: \"" + this.uncommBuf.toString() + "\"\n");
+      logStr.append("wordToSearch: \"" + this.getWordToSearch() + "\"\n");
+      logStr.append("length: " + this.getWordToSearch().length() + "\n");
+      logStr.append("buf caret pos: " + this.commBufPos + "\n");
+      if (this.getWordToSearch().length() > 0)
          return logStr.toString();
       else
          return "";
    }
 
    private void appendCommitted(char ch) {
-      if (commBufPos > commBuf.length())
-         commBuf.append(ch);
+      if (this.commBufPos > this.commBuf.length())
+         this.commBuf.append(ch);
       else {
-         commBuf.insert(commBufPos, ch);
-         commBufPos++;
+         this.commBuf.insert(this.commBufPos, ch);
+         this.commBufPos++;
       }
    }
 
    private void backspaceCommitted() {
-      if (commBufPos > 0) {
-         commBuf.delete(commBufPos - 1, commBufPos);
-         commBufPos--;
+      if (this.commBufPos > 0) {
+         this.commBuf.delete(this.commBufPos - 1, this.commBufPos);
+         this.commBufPos--;
       }
    }
 
    private Rectangle getWordBoxBounds() throws BadLocationException {
       // 현재 문단의 폰트 속성 조사
-      AttributeSet attrSet = editor.getParagraphAttributes();
+      AttributeSet attrSet = this.editor.getParagraphAttributes();
       String fontFamily = StyleConstants.getFontFamily(attrSet);
       int fontStyle = StyleConstants.isBold(attrSet) ? Font.BOLD : Font.PLAIN;
       fontStyle |= StyleConstants.isItalic(attrSet) ? Font.ITALIC : Font.PLAIN;
@@ -223,79 +261,45 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       // 조사된 속성으로 폰트 객체를 만들고, 입력단어의 길이를 측정함
       Font font = new Font(fontFamily, fontStyle, fontSize);
-      int width = editor.getFontMetrics(font).stringWidth(getWordToSearch());
+      int width = this.editor.getFontMetrics(font).stringWidth(this.getWordToSearch());
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
-      Rectangle rect = editor.modelToView(editor.getCaretPosition());
+      Rectangle rect = this.editor.modelToView(this.editor.getCaretPosition());
       rect.translate(-width, 0);
       rect.setSize(width, rect.height);
       return rect;
    }
 
    private String getWordToSearch() {
-      if (uncommBuf.length() > 0)
-         return commBuf.toString() + uncommBuf.toString();
+      if (this.uncommBuf.length() > 0)
+         return this.commBuf.toString() + this.uncommBuf.toString();
       else
-         return commBuf.toString();
+         return this.commBuf.toString();
    }
 
+
    private void initUncommittedBuffer() {
-      uncommBuf = new StringBuffer();
+      this.uncommBuf = new StringBuffer();
    }
 
    private void initWordBuffers() {
-      commBuf = new StringBuffer();
-      commBufPos = 0;
-      initUncommittedBuffer();
+      this.commBuf = new StringBuffer();
+      this.commBufPos = 0;
+      this.initUncommittedBuffer();
    }
 
-  public static boolean isEnglish(char ch) {
-    return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
-  }
-
-  public static boolean isEnglish(CharSequence str) {
-    for (int i = 0; i < str.length(); i++) {
-      char ch = str.charAt(i);
-      if (!isEnglish(ch))
-        return false;
-    }
-    return true;
-  }
-
-  public static boolean isKorean(CharSequence str) {
-    for (int i = 0; i < str.length(); i++) {
-      char ch = str.charAt(i);
-      if (ch < 0xAC00 || 0xD7A3 < ch)
-        return false;
-    }
-    return true;
-  }
-
-
-  public static boolean isKorean(char ch) {
-    if (ch < 0xAC00 || 0xD7A3 < ch)
-      return false;
-    return true;
-  }
-
-  public static boolean isKoreanAlphabet(char ch) {
-    if (ch < 0x3131 || 0x318E < ch)
-      return false;
-    return true;
-  }
-
-  private boolean isNumber(CharSequence str) {
-    for (int i = 0; i < str.length(); i++) {
-      char ch = str.charAt(i);
-      if (ch < 0x30 || 0x39 < ch)
-        return false;
-    }
-    return true;
-  }
+   private boolean isNumber(CharSequence str) {
+      for (int i = 0; i < str.length(); i++) {
+         char ch = str.charAt(i);
+         if (ch < 0x30 || 0x39 < ch)
+            return false;
+      }
+      return true;
+   }
 
    /**
     * 방향키를 입력 받으면 버퍼의 캐럿을 해당 방향키에 맞게 처리한다.
-    * 
+    *
     * @param keyCode
     */
    private void processArrowKeys(int keyCode) {
@@ -303,16 +307,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    private void refreshPopupLocation() throws BadLocationException {
-      Rectangle anchor = editor.modelToView(editor.getCaretPosition());
-    setLocation(anchor.x, anchor.y + anchor.height);
-      popupBox.setLocation(anchor.x, anchor.y + anchor.height);
+      Rectangle anchor = this.editor.modelToView(this.editor.getCaretPosition());
+      this.popupBox.setLocation(anchor.x, anchor.y + anchor.height);
    }
 
    private void showPopup() {
       try {
-         updatePopup();
-         refreshPopupLocation();
-         popupBox.setVisible(true);
+         this.updatePopup();
+         this.refreshPopupLocation();
+         this.popupBox.setVisible(true);
       } catch (BadLocationException e1) {
          e1.printStackTrace();
       }
@@ -320,24 +323,24 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    private void showWordBox() {
       try {
-         wordBox.setBounds(getWordBoxBounds());
-         wordBox.setVisible(true);
+         this.wordBox.setBounds(this.getWordBoxBounds());
+         this.wordBox.setVisible(true);
       } catch (BadLocationException e) {
-         wordBox.setVisible(false);
+         this.wordBox.setVisible(false);
          e.printStackTrace();
       }
    }
 
    private void updatePopup() {
-      Vector<String> matchings = wordManager.getMatchingWords(getWordToSearch());
-      popupList.setListData(matchings);
+      Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
+      this.popupList.setListData(matchings);
    }
 
    private void updateUncommitted(char ch) {
-      if (uncommBuf.length() > 0)
-         uncommBuf.setCharAt(0, ch);
+      if (this.uncommBuf.length() > 0)
+         this.uncommBuf.setCharAt(0, ch);
       else {
-         uncommBuf.append(ch);
+         this.uncommBuf.append(ch);
       }
    }
 }
