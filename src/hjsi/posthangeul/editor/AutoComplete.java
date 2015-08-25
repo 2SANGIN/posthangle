@@ -247,11 +247,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             case KeyEvent.VK_ENTER:
                if (this.isShowingInputAssist()) {
                   // 단어를 입력 중인데 캐럿 위치가 단어의 끝이 아니라면 엔터를 입력시 줄바꿈을 하지 않고, 단어의 끝으로 캐럿을 위치시킨다.
-                  int caretOffset = this.getWordToSearch().length() - this.commBufPos;
-                  if (caretOffset > 0) {
-                     this.editor.setCaretPosition(this.editor.getCaretPosition() + caretOffset);
-                     e.consume();
-                  }
+                  this.moveCaretAfterWord();
+                  e.consume();
                }
                //$FALL-THROUGH$
             case KeyEvent.VK_SPACE:
@@ -259,10 +256,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                   this.wordManager.countWord(this.getWordToSearch());
                   this.initWordBuffers();
                   this.hideInputAssist();
-                  break;
+               } else {
+                  this.showInputAssist();
                }
-               this.showInputAssist();
-               //$FALL-THROUGH$
+               break;
             case KeyEvent.VK_TAB:
                if (this.isShowingInputAssist()) {
                   int index = this.popupList.getSelectedIndex();
@@ -274,21 +271,21 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                         /* replace */
                         int caretPos = this.getCaretPos();
                         int length = this.getWordToSearch().length();
+                        int minus = 0;
+                        if (this.commBufPos < length)
+                           minus = this.commBufPos + 1;
                         AttributeSet attrSet = this.editor.getInputAttributes();
                         try {
-                           this.editor.getDocument().remove(caretPos - length, length);
-                           this.editor.getDocument().insertString(caretPos - length, wordToReplace,
-                                 attrSet);
+                           this.editor.getDocument().remove(caretPos - length - minus, length);
+                           this.editor.getDocument().insertString(caretPos - length - minus,
+                                 wordToReplace, attrSet);
                         } catch (BadLocationException e1) {
                            e1.printStackTrace();
                         }
                      }
                      /* count */
                      this.wordManager.countWord(wordToReplace);
-                     int caretOffset = this.getWordToSearch().length() - this.commBufPos;
-                     if (caretOffset > 0) {
-                        this.editor.setCaretPosition(this.editor.getCaretPosition() + caretOffset);
-                     }
+                     this.moveCaretAfterWord();
                      e.consume();
                   } else {
                      this.wordManager.countWord(this.getWordToSearch());
@@ -436,6 +433,16 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
+    * 현재 에디터의 캐럿 위치를 입력 된 단어의 뒤로 위치시킨다.
+    */
+   private void moveCaretAfterWord() {
+      int caretOffset = this.getWordToSearch().length() - this.commBufPos;
+      if (caretOffset > 0) {
+         this.editor.setCaretPosition(this.editor.getCaretPosition() + caretOffset);
+      }
+   }
+
+   /**
     * 방향키를 입력 받으면 버퍼의 캐럿 및 기타 동작을 해당 방향키에 맞게 처리한다.
     *
     * @param e 위, 아래 방향키 처리 후 consume 시키기 위한 KeyEvent
@@ -520,7 +527,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshPopupLocation() {
       try {
          Rectangle anchor = this.editor.modelToView(this.getCaretPos());
-         this.popupBox.setLocation(anchor.x, anchor.y + anchor.height);
+         this.popupBox.setLocation(anchor.x, anchor.y + anchor.height + 2);
       } catch (BadLocationException e) {
          e.printStackTrace();
       }
