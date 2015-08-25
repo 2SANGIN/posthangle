@@ -3,7 +3,6 @@ package hjsi.posthangeul.editor;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
@@ -84,15 +83,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
-    * 텍스트 에디터의 캐럿 포지션을 별도로 관리한다. 다른 메소드에서 캐럿의 최신 위치를 사용하기 위함.
-    */
-   private int caretPos = 0;
-
-   /**
     * 조립이 끝나 완성된 한글 버퍼
     */
    private StringBuffer commBuf;
-
    /**
     * 완성된 한글 버퍼의 가상 캐럿 위치
     */
@@ -102,6 +95,16 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * 자동완성 기능이 동작하게 될 대상 텍스트 에디터
     */
    private final JTextPane editor;
+
+   /**
+    * 현재 처리 중인 keyChar
+    */
+   private char keyChar;
+
+   /**
+    * 현재 처리 중인 keyCode
+    */
+   private int keyCode;
 
    /**
     * 자동완성 단어를 보여줄 스크롤 박스
@@ -172,7 +175,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    @Override
    public void inputMethodTextChanged(InputMethodEvent event) {
       // System.out.println(event.paramString());
-      this.setCaretPos(this.editor.getCaretPosition()); // 일단 에디터의 캐럿 위치와 일치시킴
       AttributedCharacterIterator str = event.getText();
 
       System.out.println("IME Event Occur!");
@@ -202,22 +204,21 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    @Override
    public void keyPressed(KeyEvent e) {
-      char ch = e.getKeyChar();
-      int code = e.getKeyCode();
-      this.setCaretPos(this.editor.getCaretPosition()); // 일단 에디터의 캐럿 위치와 일치시킴
+      this.keyChar = e.getKeyChar();
+      this.keyCode = e.getKeyCode();
 
-      if (this.processCharacterKeys(ch)) {
+      if (this.processCharacterKeys()) {
          if (this.isShowingInputAssist()) {
             this.refreshInputAssist();
          } else {
             this.showInputAssist();
          }
-      } else if (this.processArrowKeys(code)) {
+      } else if (this.processArrowKeys()) {
          if (this.isShowingInputAssist()) {
             this.refreshInputAssist();
          }
       } else {
-         switch (code) {
+         switch (this.keyCode) {
             case KeyEvent.VK_ESCAPE:
                if (this.isShowingInputAssist())
                   this.hideInputAssist();
@@ -253,18 +254,22 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          }
       }
 
-      if (code != KeyEvent.VK_ENTER && code != KeyEvent.VK_SPACE)
+      if (this.keyCode != KeyEvent.VK_ENTER && this.keyCode != KeyEvent.VK_SPACE)
          System.out.println(this.logString());
    }
 
    @Override
    public void keyReleased(KeyEvent e) {
       // System.out.println(e.paramString());
+      this.keyChar = e.getKeyChar();
+      this.keyCode = e.getKeyCode();
    }
 
    @Override
    public void keyTyped(KeyEvent e) {
       // System.out.println(e.paramString());
+      this.keyChar = e.getKeyChar();
+      this.keyCode = e.getKeyCode();
    }
 
    /**
@@ -297,7 +302,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       else {
          this.commBuf.insert(this.commBufPos, ch);
          this.commBufPos++;
-         this.setCaretPos(this.getCaretPos() + 1);
       }
    }
 
@@ -312,10 +316,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
-    * @return the caretPos
+    * @return this.editor.getCaretPosition();
     */
    private int getCaretPos() {
-      return this.caretPos;
+      int caretPos = this.editor.getCaretPosition();
+      if (this.keyCode == KeyEvent.VK_LEFT)
+         caretPos -= 1;
+      else if (this.keyCode == KeyEvent.VK_RIGHT)
+         caretPos += 1;
+      return caretPos;
    }
 
    /**
@@ -364,28 +373,25 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    /**
     * 방향키를 입력 받으면 버퍼의 캐럿 및 기타 동작을 해당 방향키에 맞게 처리한다.
     *
-    * @param keyCode 가상 키코드
     * @return 방향키를 처리했다면 true, 그 이외의 키는 false
     */
-   private boolean processArrowKeys(int keyCode) {
+   private boolean processArrowKeys() {
       boolean isConsumed = false;
-      if (keyCode == KeyEvent.VK_LEFT) {
+      if (this.keyCode == KeyEvent.VK_LEFT) {
          System.out.println("left key pressed!");
-         this.setCaretPos(this.getCaretPos() - 1);
          this.commBufPos--;
          if (this.commBufPos < 0) {
             this.initWordBuffers();
             this.hideInputAssist();
          }
          isConsumed = true;
-      } else if (keyCode == KeyEvent.VK_RIGHT) {
+      } else if (this.keyCode == KeyEvent.VK_RIGHT) {
          System.out.println("right key pressed!");
          if (this.getWordToSearch().length() == this.commBufPos) {
             this.wordManager.countWord(this.getWordToSearch());
             this.initWordBuffers();
             this.hideInputAssist();
          } else {
-            this.setCaretPos(this.getCaretPos() + 1);
             this.commBufPos++;
          }
          isConsumed = true;
@@ -396,16 +402,17 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    /**
     * 한글이나 알파벳 입력에 대한 처리를 한다.
     *
-    * @param keyChar 글자 코드 값
     * @return 한글이나 알파벳에 대한 처리를 했으면 true, 그 이외의 키는 false
     */
-   private boolean processCharacterKeys(char keyChar) {
+   private boolean processCharacterKeys() {
       boolean isConsumed = false;
-      if ((0xAC00 <= keyChar && keyChar <= 0xD7A3) || (0x3131 <= keyChar && keyChar <= 0x318E)) {
+      if ((0xAC00 <= this.keyChar && this.keyChar <= 0xD7A3)
+            || (0x3131 <= this.keyChar && this.keyChar <= 0x318E)) {
          // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
          isConsumed = true;
-      } else if ((0x61 <= keyChar && keyChar <= 0x7A) || (0x41 <= keyChar && keyChar <= 0x5A)) {
-         this.appendCommitted(keyChar);
+      } else if ((0x61 <= this.keyChar && this.keyChar <= 0x7A)
+            || (0x41 <= this.keyChar && this.keyChar <= 0x5A)) {
+         this.appendCommitted(this.keyChar);
          isConsumed = true;
       }
       return isConsumed;
@@ -453,26 +460,19 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          widthAfterCaret = metric.stringWidth(endStr);
          System.out.println("endStr: \"" + endStr + "\"");
       }
+      System.out.println("widthAll: " + widthAll + ", widthAfterCaret: " + widthAfterCaret);
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
       try {
-         System.out.println("Text Length: " + this.editor.getText().length() + ", Caret Pos: "
-               + this.getCaretPos() + ", real caret pos: " + this.editor.getCaretPosition());
-         System.out
-               .println("magic caret: " + this.editor.getCaret().getMagicCaretPosition() + " \n");
-         Rectangle rect;
-         Point pos = this.editor.getCaret().getMagicCaretPosition();
-         if (pos != null) {
-            rect = new Rectangle(pos.x, pos.y, 0, 20);
-         } else {
-            if (false)
-               rect = this.editor.modelToView(this.getCaretPos());
-            rect = new Rectangle(0, 0, 0, 0);
-         }
-         System.out.println("x: " + rect.x + ", widthAll: " + widthAll + ", widthAfterCaret: "
-               + widthAfterCaret);
+         System.out.print("Text Length: " + this.editor.getText().length());
+         System.out.print(",Caret Pos: " + this.getCaretPos());
+         System.out.print(",real caret pos: " + this.editor.getCaretPosition());
+         System.out.print(",magicCaret: " + this.editor.getCaret().getMagicCaretPosition() + " \n");
+         Rectangle rect = this.editor.modelToView(this.getCaretPos());
+         System.out.println(rect);
          rect.translate(-(widthAll - widthAfterCaret), 0);
          rect.setSize(widthAll, rect.height);
+         System.out.println(rect);
          this.wordBox.setBounds(rect);
       } catch (BadLocationException e) {
          e.printStackTrace();
@@ -485,14 +485,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshWordList() {
       Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
       this.popupList.setListData(matchings);
-   }
-
-   /**
-    * @param caretPos the caretPos to set
-    */
-   private void setCaretPos(int caretPos) {
-      if (caretPos >= 0 && caretPos <= this.editor.getText().length())
-         this.caretPos = caretPos;
    }
 
    /**
