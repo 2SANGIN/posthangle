@@ -18,9 +18,11 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -174,28 +176,40 @@ public class Shortcut extends JPanel implements CaretListener {
       btnFileNew.setOpaque(false);
       btnFileNew.setMargin(new Insets(0, 0, 0, 0));
       btnFileNew.addActionListener(new FileNewAction(app));
+      btnFileNew.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F1"), "New File");
+      btnFileNew.getActionMap().put("New File", new FileNewAction(app));
 
       btnFileOpen.setOpaque(false);
       btnFileOpen.setMargin(new Insets(0, 0, 0, 0));
       btnFileOpen.addActionListener(new FileOpenAction(app));
+      btnFileOpen.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F2"), "Open File");
+      btnFileOpen.getActionMap().put("Open File", new FileOpenAction(app));
 
       btnFileSave.setOpaque(false);
       btnFileSave.setMargin(new Insets(0, 0, 0, 0));
       btnFileSave.addActionListener(new FileSaveAction(app, false));
+      btnFileSave.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F3"), "Save File");
+      btnFileSave.getActionMap().put("Save File", new FileSaveAction(app, false));
 
       btnFileSaveAs.setOpaque(false);
       btnFileSaveAs.setMargin(new Insets(0, 0, 0, 0));
       btnFileSaveAs.addActionListener(new FileSaveAction(app, true));
+      btnFileSaveAs.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F4"), "SaveAs File");
+      btnFileSaveAs.getActionMap().put("SaveAs File", new FileSaveAction(app, true));
       /* end of file processing buttons */
 
       /* font size buttons */
       btnFontSizeUp.setOpaque(false);
       btnFontSizeUp.setMargin(new Insets(0, 0, 0, 0));
       btnFontSizeUp.addActionListener(new FontSizeAction(true, new int[] {9, 12, 16, 22}));
+      btnFontSizeUp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F5"), "Size Up");
+      btnFontSizeUp.getActionMap().put("Size Up", new FontSizeAction(true, new int[] {9, 12, 16, 22}));
 
       btnFontSizeDown.setOpaque(false);
       btnFontSizeDown.setMargin(new Insets(0, 0, 0, 0));
       btnFontSizeDown.addActionListener(new FontSizeAction(false, new int[] {9, 12, 16, 22}));
+      btnFontSizeDown.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F6"), "Size Down");
+      btnFontSizeDown.getActionMap().put("Size Down", new FontSizeAction(false, new int[] {9, 12, 16, 22}));
       /* end of font size buttons */
 
       /* font emphasis buttons */
@@ -275,7 +289,13 @@ public class Shortcut extends JPanel implements CaretListener {
       // topNavi.add(comboFontFamily);
       // topNavi.add(btnKeyCode);
 
-      btnFileNew.setToolTipText("새 파일 (F1)");
+      btnFileNew.setToolTipText("새 파일(F1)");
+      btnFileOpen.setToolTipText("파일 열기(F2)");
+      btnFileSave.setToolTipText("저장(F3)");
+      btnFileSaveAs.setToolTipText("다른 이름으로 저장(F4)");
+      
+      btnFontSizeUp.setToolTipText("글자 크게(F5)");
+      btnFontSizeDown.setToolTipText("글자 작게(F6)");
 
       toolbar.add(btnFileNew);
       toolbar.add(btnFileOpen);
