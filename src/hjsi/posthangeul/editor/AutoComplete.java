@@ -30,17 +30,25 @@ import javax.swing.text.StyleConstants;
  */
 public class AutoComplete implements KeyListener, InputMethodListener {
    /**
+    * 글자 ch가 알파벳 대소문자에 해당하는지 검사한다.
+    *
     * @param ch 검사할 글자
     * @return 영문 알파벳 소문자 혹은 대문자라면 true, 아니라면 false
     */
-   public static boolean isEnglish(char ch) {
+   public static boolean isAlphabet(char ch) {
       return !((ch < 0x41 || 0x5A < ch) && (ch < 0x61 || 0x7A < ch));
    }
 
+   /**
+    * 문장 전체가 알파벳 대소문자에 해당하는지 검사한다.
+    *
+    * @param str 검사할 문장
+    * @return 영문 대소문자로 이루어진 문장이라면 true, 아니라면 false
+    */
    public static boolean isEnglish(CharSequence str) {
       for (int i = 0; i < str.length(); i++) {
          char ch = str.charAt(i);
-         if (!isEnglish(ch))
+         if (!isAlphabet(ch))
             return false;
       }
       return true;
@@ -419,8 +427,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             || (0x3131 <= this.keyChar && this.keyChar <= 0x318E)) {
          // 한글의 경우이긴 하지만 들어올 일 없을 거임 (inputMethodTextChanged에서 걸러짐)
          isConsumed = true;
-      } else if ((0x61 <= this.keyChar && this.keyChar <= 0x7A)
-            || (0x41 <= this.keyChar && this.keyChar <= 0x5A)) {
+      } else if (isAlphabet(this.keyChar)) {
          this.appendCommitted(this.keyChar);
          isConsumed = true;
       }
@@ -464,8 +471,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       String wordToSearch = this.getWordToSearch();
       int widthAll = metric.stringWidth(wordToSearch);
       int widthAfterCaret = 0;
-      if (!wordToSearch.isEmpty() && wordToSearch.length() != this.commBufPos) {
-         String endStr = wordToSearch.substring(this.commBufPos);
+      if (!wordToSearch.isEmpty()
+            && (wordToSearch.length() != this.commBufPos || isAlphabet(this.keyChar))) {
+         String endStr;
+         if (!isAlphabet(this.keyChar)) {
+            endStr = wordToSearch.substring(this.commBufPos);
+         } else {
+            endStr = wordToSearch.substring(wordToSearch.length() - 1, wordToSearch.length());
+         }
          widthAfterCaret = metric.stringWidth(endStr);
          System.out.println("endStr: \"" + endStr + "\"");
       }
