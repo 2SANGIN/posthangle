@@ -19,6 +19,9 @@ public class SwitchLine {
             if (ke.getKeyCode() == KeyEvent.VK_DOWN) {
                if (ke.isAltDown()) {
                   try {
+                     if(getEndPos() + 1 >= parent.getText().length())
+                        return;
+                     
                      parent.select(getStartPos(), getEndPos());
                      cur = parent.getSelectedText();
                      parent.setCaretPosition(getEndPos() + 1);
@@ -42,6 +45,8 @@ public class SwitchLine {
             else if (ke.getKeyCode() == KeyEvent.VK_UP) {
                if (ke.isAltDown()) {
                   try {
+                     if(getStartPos() - 1 <= 0)
+                        return;
                      parent.select(getStartPos(), getEndPos());
                      cur = parent.getSelectedText();
                      parent.setCaretPosition(getStartPos() - 1);
