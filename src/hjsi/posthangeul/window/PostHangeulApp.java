@@ -29,6 +29,7 @@ public class PostHangeulApp {
     /* create menu */
     shortcuts = new Shortcut(this, 24);
     mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
+    mainWindow.getContentPane().add(new FileTree(new File(".")), BorderLayout.WEST);
 
     /* add editor */
     editor = new SwiftEditor();
