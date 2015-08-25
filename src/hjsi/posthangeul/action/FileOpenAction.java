@@ -3,13 +3,17 @@ package hjsi.posthangeul.action;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit.StyledTextAction;
+import javax.swing.text.rtf.RTFEditorKit;
 
 import hjsi.posthangeul.window.PostHangeulApp;
 
@@ -42,22 +46,20 @@ public class FileOpenAction extends StyledTextAction {
     int ret = fileChooser.showOpenDialog(null);
 
     if (ret == JFileChooser.APPROVE_OPTION) {
-      StringWriter strWriter = new StringWriter();
-
       try {
-        int buf;
         File open = fileChooser.getSelectedFile();
-        BufferedReader reader = new BufferedReader(new FileReader(open));
-
-        while ((buf = reader.read()) != -1) {
-          strWriter.write(buf);
-        }
-        reader.close();
-        editor.setText(strWriter.toString());
+        RTFEditorKit kit = new RTFEditorKit();
+        FileInputStream in = new FileInputStream(open);
+        StyledDocument doc = (StyledDocument) editor.getDocument();
+        
+        kit.read(in, doc, 0);
+        editor.setText(doc.getText(0, doc.getLength() - 1));
         app.setCurrentFile(open);
-      } catch (IOException e1) {
-        e1.printStackTrace();
-      }
+        
+      } catch (Exception e1) {
+         // TODO Auto-generated catch block
+         e1.printStackTrace();
+      } 
     }
 
     editor.requestFocus();
