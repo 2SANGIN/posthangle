@@ -17,10 +17,17 @@ public class WordManager {
 
    private Map<String, Integer> wordCounter;
 
-   public WordManager() {
+   {
       this.setWordCounter(new TreeMap<String, Integer>());
       this.historyTop10 = new TreeMap<String, Vector<String>>();
       this.historyLast = new TreeMap<String, String>();
+
+      // test용
+      this.countWord("안녕하세요");
+      this.countWord("안녕못해");
+      this.countWord("안녕이라고");
+      this.countWord("제발말하지마");
+      this.countWord("오빠차뽑았다");
    }
 
    public void addWordAsHistory(String inputWord, String selectedWord) {
@@ -68,10 +75,10 @@ public class WordManager {
          /*
           * TODO 여기에 검색 알고리즘을 넣어야함!! 초성 검색이나, 단어 일부를 포함하는 경우 등을 포함하는 검색 알고리즘
           */
-    	 if (str.length() < inputWord.length())
-    		 continue;
-    
-    	 else if (str.contains(inputWord) || str.startsWith(inputWord) || (inputWord.length() == 0))
+         if (str.length() < inputWord.length())
+            continue;
+
+         else if (str.contains(inputWord) || str.startsWith(inputWord) || (inputWord.length() == 0))
             matchingWords.add(str);
 
          // 초성을 포함하는지

@@ -221,8 +221,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          } else {
             this.showInputAssist();
          }
-      } else if (this.processArrowKeys()) {
-         if (this.isShowingInputAssist()) {
+      } else if (this.processArrowKeys(e)) {
+         if (this.isShowingInputAssist() && !e.isConsumed()) {
             this.refreshInputAssist();
          }
       } else {
@@ -234,7 +234,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                   this.initWordBuffers();
                break;
 
+            case KeyEvent.VK_DELETE:
+               this.deleteCommitted();
+               this.refreshInputAssist();
+               break;
+
             case KeyEvent.VK_BACK_SPACE:
+               // TODO 지우기 전 단어 길이(px) 조사해서 지우고 난 뒤의 길이와 비교, 그 차이만큼 왼쪽으로 이동시켜서 보정해줘야함
+               this.refreshInputAssist();
                this.backspaceCommitted();
                break;
 
@@ -333,6 +340,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
+    * 조립 완성된 글자 버퍼에서 현재 commBufPos가 가리키는 위치의 뒷글자를 지운다.
+    */
+   private void deleteCommitted() {
+      if (this.commBufPos < this.commBuf.length()) {
+         this.commBuf.delete(this.commBufPos, this.commBufPos + 1);
+      }
+   }
+
+   /**
     * @return this.editor.getCaretPosition();
     */
    private int getCaretPos() {
@@ -390,28 +406,52 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    /**
     * 방향키를 입력 받으면 버퍼의 캐럿 및 기타 동작을 해당 방향키에 맞게 처리한다.
     *
+    * @param e 위, 아래 방향키 처리 후 consume 시키기 위한 KeyEvent
     * @return 방향키를 처리했다면 true, 그 이외의 키는 false
     */
-   private boolean processArrowKeys() {
-      boolean isConsumed = false;
-      if (this.keyCode == KeyEvent.VK_LEFT) {
-         System.out.println("left key pressed!");
-         this.commBufPos--;
-         if (this.commBufPos < 0) {
-            this.initWordBuffers();
-            this.hideInputAssist();
-         }
-         isConsumed = true;
-      } else if (this.keyCode == KeyEvent.VK_RIGHT) {
-         System.out.println("right key pressed!");
-         if (this.getWordToSearch().length() == this.commBufPos) {
-            this.wordManager.countWord(this.getWordToSearch());
-            this.initWordBuffers();
-            this.hideInputAssist();
-         } else {
-            this.commBufPos++;
-         }
-         isConsumed = true;
+   private boolean processArrowKeys(KeyEvent e) {
+      boolean isConsumed = true;
+      switch (this.keyCode) {
+         case KeyEvent.VK_LEFT:
+            System.out.println("left key pressed!");
+            this.commBufPos--;
+            if (this.commBufPos < 0) {
+               this.initWordBuffers();
+               this.hideInputAssist();
+            }
+            break;
+
+         case KeyEvent.VK_RIGHT:
+            System.out.println("right key pressed!");
+            if (this.getWordToSearch().length() == this.commBufPos) {
+               this.wordManager.countWord(this.getWordToSearch());
+               this.initWordBuffers();
+               this.hideInputAssist();
+            } else {
+               this.commBufPos++;
+            }
+            break;
+
+         case KeyEvent.VK_UP:
+            if (this.isShowingInputAssist()) {
+               int index = this.popupList.getSelectedIndex();
+               if (index > 0)
+                  this.popupList.setSelectedIndex(index - 1);
+               e.consume();
+            }
+            break;
+
+         case KeyEvent.VK_DOWN:
+            if (this.isShowingInputAssist()) {
+               int index = this.popupList.getSelectedIndex();
+               if (index < this.popupList.getModel().getSize())
+                  this.popupList.setSelectedIndex(index + 1);
+               e.consume();
+            }
+            break;
+
+         default:
+            isConsumed = false;
       }
       return isConsumed;
    }
@@ -486,10 +526,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       // 에디터의 현재 캐럿 위치로부터 입력단어에 해당하는 영역을 계산함
       try {
-         System.out.print("Text Length: " + this.editor.getText().length());
-         System.out.print(",Caret Pos: " + this.getCaretPos());
-         System.out.print(",real caret pos: " + this.editor.getCaretPosition());
-         System.out.print(",magicCaret: " + this.editor.getCaret().getMagicCaretPosition() + " \n");
+         System.out.print("Caret Pos: " + this.getCaretPos());
+         System.out.println(", real caret pos: " + this.editor.getCaretPosition());
          Rectangle rect = this.editor.modelToView(this.getCaretPos());
          System.out.println(rect);
          rect.translate(-(widthAll - widthAfterCaret), 0);
@@ -507,6 +545,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshWordList() {
       Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
       this.popupList.setListData(matchings);
+      if (this.popupList.getSelectedIndex() < 0)
+         this.popupList.setSelectedIndex(0);
    }
 
    /**
