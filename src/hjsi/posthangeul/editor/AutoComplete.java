@@ -262,8 +262,28 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_TAB:
-               // TODO 현재 선택된 단어를 replace한다!
-               // 카운트도 증가시킨다!
+               if (this.isShowingInputAssist()) {
+                  int index = this.popupList.getSelectedIndex();
+                  if (index < 0)
+                     index = 0;
+                  String wordToReplace = this.popupList.getModel().getElementAt(index);
+                  if (this.getWordToSearch().compareTo(wordToReplace) != 0) {
+                     /* replace */
+                     int caretPos = this.getCaretPos();
+                     int length = this.getWordToSearch().length();
+                     AttributeSet attrSet = this.editor.getInputAttributes();
+                     try {
+                        this.editor.getDocument().remove(caretPos - length, length);
+                        this.editor.getDocument().insertString(caretPos - length, wordToReplace,
+                              attrSet);
+                     } catch (BadLocationException e1) {
+                        e1.printStackTrace();
+                     }
+                  }
+                  /* count */
+                  this.wordManager.countWord(wordToReplace);
+                  e.consume();
+               }
                break;
 
             case KeyEvent.VK_SHIFT:
