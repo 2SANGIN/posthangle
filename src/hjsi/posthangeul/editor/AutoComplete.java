@@ -231,6 +231,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_ENTER:
+               if (this.isShowingInputAssist()) {
+                  // 단어를 입력 중인데 캐럿 위치가 단어의 끝이 아니라면 엔터를 입력시 줄바꿈을 하지 않고, 단어의 끝으로 캐럿을 위치시킨다.
+                  int caretOffset = this.getWordToSearch().length() - this.commBufPos;
+                  if (caretOffset > 0) {
+                     this.editor.setCaretPosition(this.editor.getCaretPosition() + caretOffset);
+                     e.consume();
+                  }
+               }
+               //$FALL-THROUGH$
             case KeyEvent.VK_SPACE:
                this.wordManager.countWord(this.commBuf.toString());
                this.initWordBuffers();
