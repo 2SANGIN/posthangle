@@ -11,9 +11,8 @@ public class WordManager {
    /**
     * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
     */
-   private final Comparator<String> wordComparator =
-         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
-               - this.getWordCounter().get(o1).intValue());
+   private final Comparator<String> wordComparator = (o1, o2) -> (this.getWordCounter().get(o2)
+         .intValue() - this.getWordCounter().get(o1).intValue());
 
    private Map<String, Integer> wordCounter;
 
@@ -88,6 +87,7 @@ public class WordManager {
          else if (AutoComplete.isKorean(str)) {
             int index = 0;
             for (char input : inputWord.toCharArray()) {
+               // 초성만 입력
                if (AutoComplete.isKoreanAlphabet(input)) {
                   System.out.println("alphabet" + ' ' + input + ' '
                         + PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index))));
@@ -99,9 +99,13 @@ public class WordManager {
                   }
                   matchingWords.remove(str);
                   break;
+                  // 조합된 한글 입력
                } else if (AutoComplete.isKorean(input)) {
+                  // 초성과 중성 모두 같아야
                   if (PostIME.getInitialChar(PostIME.getInitialIndex(input)) == PostIME
-                        .getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
+                        .getInitialChar(PostIME.getInitialIndex(str.charAt(index)))
+                        && PostIME.getMedialChar(PostIME.getMedialIndex(input)) == PostIME
+                              .getMedialChar(PostIME.getMedialIndex(str.charAt(index)))) {
                      System.out.println(input + ' ' + str.charAt(index));
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
