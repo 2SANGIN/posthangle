@@ -99,9 +99,28 @@ public class WordManager {
                   break;
                   // 조합된 한글 입력
                } else if (isKorean(input)) {
-                  // 초성과 중성 모두 같아야
-                  if (getInitial(input) == getInitial(str.charAt(index))
+                  // input은 종성이 있고 str은 종성이 없는 경우
+                  if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) == 0) {
+                     // input의 종성이 str 다음 글자의 초성과 같을 경우
+                     if (inputWord.length() < str.length()) {
+                        if (getFinal(input) == getInitial(str.charAt(index + 1))) {
+                           matchingWords.add(str);
+                           continue;
+                        }
+                     }
+                     matchingWords.remove(str);
+                     break;
+                  }
+                  // 종성이 다른 경우
+                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) != 0) {
+                     if (getFinal(input) != getFinal(str.charAt(index))) {
+                        matchingWords.remove(str);
+                        break;
+                     }
+                     // 초성과 중성 모두 같아야
+                  } else if (getInitial(input) == getInitial(str.charAt(index))
                         && getMedial(input) == getMedial(str.charAt(index))) {
+
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
@@ -145,6 +164,15 @@ public class WordManager {
 
    private char getMedial(char ch) {
       return PostIME.getMedialChar(PostIME.getMedialIndex(ch));
+   }
+
+   private char getFinal(char ch) {
+      return PostIME.getFinalChar(PostIME.getFinalIndex(ch));
+   }
+
+   // if it has no final, return 0
+   private int hasFinal(char ch) {
+      return PostIME.getFinalIndex(ch);
    }
 
    private boolean isKorean(String str) {
