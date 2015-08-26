@@ -84,14 +84,12 @@ public class WordManager {
          // matching words에는 완성된 글자만 들어가있음
          // inputWords에는 영어 / 초성 / 완성된한글 의 조합들로 구성
 
-         else if (AutoComplete.isKorean(str)) {
+         else if (isKorean(str)) {
             int index = 0;
             for (char input : inputWord.toCharArray()) {
                // 초성만 입력
-               if (AutoComplete.isKoreanAlphabet(input)) {
-                  System.out.println("alphabet" + ' ' + input + ' '
-                        + PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index))));
-                  if (input == PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
+               if (isKoreanAlphabet(input)) {
+                  if (input == getInitial(str.charAt(index))) {
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
@@ -100,13 +98,10 @@ public class WordManager {
                   matchingWords.remove(str);
                   break;
                   // 조합된 한글 입력
-               } else if (AutoComplete.isKorean(input)) {
+               } else if (isKorean(input)) {
                   // 초성과 중성 모두 같아야
-                  if (PostIME.getInitialChar(PostIME.getInitialIndex(input)) == PostIME
-                        .getInitialChar(PostIME.getInitialIndex(str.charAt(index)))
-                        && PostIME.getMedialChar(PostIME.getMedialIndex(input)) == PostIME
-                              .getMedialChar(PostIME.getMedialIndex(str.charAt(index)))) {
-                     System.out.println(input + ' ' + str.charAt(index));
+                  if (getInitial(input) == getInitial(str.charAt(index))
+                        && getMedial(input) == getMedial(str.charAt(index))) {
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
@@ -142,5 +137,25 @@ public class WordManager {
     */
    public void setWordCounter(Map<String, Integer> wordCounter) {
       this.wordCounter = wordCounter;
+   }
+
+   private char getInitial(char ch) {
+      return PostIME.getInitialChar(PostIME.getInitialIndex(ch));
+   }
+
+   private char getMedial(char ch) {
+      return PostIME.getMedialChar(PostIME.getMedialIndex(ch));
+   }
+
+   private boolean isKorean(String str) {
+      return AutoComplete.isKorean(str);
+   }
+
+   private boolean isKorean(char ch) {
+      return AutoComplete.isKorean(ch);
+   }
+
+   private boolean isKoreanAlphabet(char ch) {
+      return AutoComplete.isKoreanAlphabet(ch);
    }
 }
