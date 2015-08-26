@@ -89,8 +89,8 @@ public class WordManager {
             int index = 0;
             for (char input : inputWord.toCharArray()) {
                if (AutoComplete.isKoreanAlphabet(input)) {
-                  System.out.println("alphabet" + ' ' + input + ' '
-                        + PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index))));
+                  // System.out.println("alphabet" + ' ' + input + ' '
+                  // + PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index))));
                   if (input == PostIME.getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
@@ -102,7 +102,7 @@ public class WordManager {
                } else if (AutoComplete.isKorean(input)) {
                   if (PostIME.getInitialChar(PostIME.getInitialIndex(input)) == PostIME
                         .getInitialChar(PostIME.getInitialIndex(str.charAt(index)))) {
-                     System.out.println(input + ' ' + str.charAt(index));
+                     // System.out.println(input + ' ' + str.charAt(index));
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
