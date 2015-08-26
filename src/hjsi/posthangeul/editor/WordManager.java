@@ -11,8 +11,9 @@ public class WordManager {
    /**
     * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
     */
-   private final Comparator<String> wordComparator = (o1, o2) -> (this.getWordCounter().get(o2)
-         .intValue() - this.getWordCounter().get(o1).intValue());
+   private final Comparator<String> wordComparator =
+         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
+               - this.getWordCounter().get(o1).intValue());
 
    private Map<String, Integer> wordCounter;
 
@@ -84,12 +85,12 @@ public class WordManager {
          // matching words에는 완성된 글자만 들어가있음
          // inputWords에는 영어 / 초성 / 완성된한글 의 조합들로 구성
 
-         else if (isKorean(str)) {
+         else if (this.isKorean(str)) {
             int index = 0;
             for (char input : inputWord.toCharArray()) {
                // 초성만 입력
-               if (isKoreanAlphabet(input)) {
-                  if (input == getInitial(str.charAt(index))) {
+               if (this.isKoreanAlphabet(input)) {
+                  if (input == this.getInitial(str.charAt(index))) {
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
                      index++;
@@ -98,12 +99,12 @@ public class WordManager {
                   matchingWords.remove(str);
                   break;
                   // 조합된 한글 입력
-               } else if (isKorean(input)) {
+               } else if (this.isKorean(input)) {
                   // input은 종성이 있고 str은 종성이 없는 경우
-                  if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) == 0) {
+                  if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) == 0) {
                      // input의 종성이 str 다음 글자의 초성과 같을 경우
                      if (inputWord.length() < str.length()) {
-                        if (getFinal(input) == getInitial(str.charAt(index + 1))) {
+                        if (this.getFinal(input) == this.getInitial(str.charAt(index + 1))) {
                            matchingWords.add(str);
                            continue;
                         }
@@ -112,14 +113,14 @@ public class WordManager {
                      break;
                   }
                   // 종성이 다른 경우
-                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) != 0) {
-                     if (getFinal(input) != getFinal(str.charAt(index))) {
+                  else if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) != 0) {
+                     if (this.getFinal(input) != this.getFinal(str.charAt(index))) {
                         matchingWords.remove(str);
                         break;
                      }
                      // 초성과 중성 모두 같아야
-                  } else if (getInitial(input) == getInitial(str.charAt(index))
-                        && getMedial(input) == getMedial(str.charAt(index))) {
+                  } else if (this.getInitial(input) == this.getInitial(str.charAt(index))
+                        && this.getMedial(input) == this.getMedial(str.charAt(index))) {
 
                      if (matchingWords.contains(str) == false)
                         matchingWords.add(str);
@@ -152,10 +153,23 @@ public class WordManager {
    }
 
    /**
+    * 메모리에 저장된 단어를 카운트 수에 상관 없이 제거한다.
+    * 
+    * @param targetWord 제거할 단어
+    */
+   public void removeWord(String targetWord) {
+      this.wordCounter.remove(targetWord);
+   }
+
+   /**
     * @param wordCounter the wordCounter to set
     */
    public void setWordCounter(Map<String, Integer> wordCounter) {
       this.wordCounter = wordCounter;
+   }
+
+   private char getFinal(char ch) {
+      return PostIME.getFinalChar(PostIME.getFinalIndex(ch));
    }
 
    private char getInitial(char ch) {
@@ -166,21 +180,17 @@ public class WordManager {
       return PostIME.getMedialChar(PostIME.getMedialIndex(ch));
    }
 
-   private char getFinal(char ch) {
-      return PostIME.getFinalChar(PostIME.getFinalIndex(ch));
-   }
-
    // if it has no final, return 0
    private int hasFinal(char ch) {
       return PostIME.getFinalIndex(ch);
    }
 
-   private boolean isKorean(String str) {
-      return AutoComplete.isKorean(str);
-   }
-
    private boolean isKorean(char ch) {
       return AutoComplete.isKorean(ch);
+   }
+
+   private boolean isKorean(String str) {
+      return AutoComplete.isKorean(str);
    }
 
    private boolean isKoreanAlphabet(char ch) {
