@@ -1,32 +1,29 @@
 package hjsi.posthangeul.action;
 
+import hjsi.posthangeul.window.PostHangeulApp;
+
 import java.awt.event.ActionEvent;
 import java.io.File;
 
-import javax.swing.JEditorPane;
 import javax.swing.text.StyledEditorKit.StyledTextAction;
 
-import hjsi.posthangeul.window.PostHangeulApp;
-
 public class FileNewAction extends StyledTextAction {
-  private static final long serialVersionUID = 620247404113872945L;
+   private static final long serialVersionUID = 620247404113872945L;
 
-  PostHangeulApp app;
+   PostHangeulApp app;
 
-  public FileNewAction(PostHangeulApp app) {
-    super("file-new");
-    this.app = app;
-  }
+   public FileNewAction(PostHangeulApp app) {
+      super("file-new");
+      this.app = app;
+   }
 
-  @Override
-  public void actionPerformed(ActionEvent e) {
-    JEditorPane editor = getEditor(e);
+   @Override
+   public void actionPerformed(ActionEvent e) {
+      app.getWindow().dispose();
 
-    app.getWindow().dispose();
-    
-    app = new PostHangeulApp();
-    app.setCurrentFile(new File("제목 없음.rtf"));
-    
-    editor.requestFocus();
-  }
+      app = new PostHangeulApp();
+      app.setCurrentFile(new File("제목 없음.rtf"));
+
+      app.getEditor().requestFocus();
+   }
 }
