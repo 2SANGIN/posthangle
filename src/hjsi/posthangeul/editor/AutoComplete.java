@@ -2,7 +2,6 @@ package hjsi.posthangeul.editor;
 
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -119,11 +118,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private int keyCode;
 
    /**
-    * 팝업리스트 크기 계산을 위한 리스트 컴포넌트의 폰트측정 객체
-    */
-   private final FontMetrics listMetrics;
-
-   /**
     * 자동완성 단어를 보여줄 스크롤 박스
     */
    private final JScrollPane popupBox;
@@ -217,10 +211,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.editor.addInputMethodListener(this);
       this.editor.add(this.popupBox);
       this.editor.add(this.wordBox);
-
-      /* 팝업리스트용 사이즈 계산 */
-      this.listMetrics = this.popupList.getFontMetrics(this.popupList.getFont());
-      System.out.println("size: " + this.listMetrics.getHeight());
    }
 
    @Override
@@ -258,11 +248,16 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
    @Override
    public void keyPressed(KeyEvent e) {
+      System.out.println(e.paramString());
       this.keyChar = e.getKeyChar();
       this.keyCode = e.getKeyCode();
       boolean isCtrlDown = (e.getModifiers() & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK;
       boolean isAltDown = (e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK;
       boolean isShiftDown = (e.getModifiers() & InputEvent.SHIFT_MASK) == InputEvent.SHIFT_MASK;
+      boolean isMetaDown = (e.getModifiers() & InputEvent.META_MASK) == InputEvent.META_MASK;
+
+      System.out.println("alt: " + isAltDown + ", ctrl: " + isCtrlDown + ", shift: " + isShiftDown
+            + ", meta: " + isMetaDown);
 
       if (!isCtrlDown && !isAltDown && this.processCharacterKeys()) {
          if (this.isShowingInputAssist()) {
@@ -305,12 +300,13 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                }
                //$FALL-THROUGH$
             case KeyEvent.VK_SPACE:
-               if (!isCtrlDown) {
+               if (!isCtrlDown && !isAltDown) {
                   this.wordManager.countWord(this.getWordToSearch());
                   this.initWordBuffers();
                   this.hideInputAssist();
                } else {
                   this.showInputAssist();
+                  e.consume();
                   System.out.println("space!!");
                }
                break;
@@ -646,12 +642,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          this.wordStartedCaretPos = this.editor.getCaretPosition();
       this.refreshPopupLocation();
       if (this.refreshWordList() > 0) {
-         Dimension d = this.popupList.getSize();
-         System.out.println(d);
-         d.width += this.deleteList.getWidth() + 10;
-         d.height += 6;
-         System.out.println(d);
-         this.popupBox.setSize(d);
          this.popupBox.setVisible(true);
       }
       this.refreshWordBox();
@@ -683,16 +673,17 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       if (numRows <= 0) {
          this.popupBox.setVisible(false);
       } else {
+         FontMetrics listMetrics = popupList.getGraphics().getFontMetrics();
+         int maxWidth = 0;
          for (int i = 0; i < numRows; i++) {
+            maxWidth = Math.max(maxWidth, listMetrics.stringWidth(matchings.get(i)));
             deleteBtn.add("X");
          }
          this.popupList.setListData(matchings);
          this.deleteList.setListData(deleteBtn);
 
-         Dimension d = this.popupList.getSize();
-         d.width += this.deleteList.getWidth() + 10;
-         d.height += 6;
-         this.popupBox.setSize(d);
+         maxWidth += listMetrics.stringWidth("X");
+         this.popupBox.setSize(maxWidth, listMetrics.getHeight());
       }
       return numRows;
    }
