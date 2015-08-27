@@ -82,6 +82,17 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       return true;
    }
 
+   /**
+    * 해당 글자가 문장부호(키보드 상의 쉼표, 마침표, 따옴표, 더하기 등과 같은 각종 특수문자) 여부를 검사한다.
+    *
+    * @param ch 검사할 글자
+    * @return 문장부호에 해당하면 true, 아니라면 false
+    */
+   public static boolean isPunctuationMark(char ch) {
+      String marks = "`~!@#$%^&*()_+=-[]{}\\|;':\"<>,./?";
+      return marks.contains(Character.toString(ch));
+   }
+
    private static boolean isNumber(CharSequence str) {
       for (int i = 0; i < str.length(); i++) {
          char ch = str.charAt(i);
@@ -217,11 +228,18 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    public void keyPressed(KeyEvent e) {
       this.keyChar = e.getKeyChar();
       this.keyCode = e.getKeyCode();
-      boolean isCtrlDown = (e.getModifiers() & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK;
-      boolean isAltDown = (e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK;
-      boolean isShiftDown = (e.getModifiers() & InputEvent.SHIFT_MASK) == InputEvent.SHIFT_MASK;
+      int mod = e.getModifiers();
+      boolean isCtrlDown = (mod & InputEvent.CTRL_MASK) == InputEvent.CTRL_MASK;
+      boolean isAltDown = (mod & InputEvent.ALT_MASK) == InputEvent.ALT_MASK;
+      boolean isShiftDown = (mod & InputEvent.SHIFT_MASK) == InputEvent.SHIFT_MASK;
 
-      if (!isCtrlDown && !isAltDown && this.processCharacterKeys()) {
+      if (!isCtrlDown && !isAltDown && isPunctuationMark(this.keyChar)) {
+         if (this.isShowingInputAssist()) {
+            this.wordManager.countWord(this.getWordToSearch());
+            this.initWordBuffers();
+            this.hideInputAssist();
+         }
+      } else if (!isCtrlDown && !isAltDown && this.processCharacterKeys()) {
          if (this.isShowingInputAssist()) {
             this.refreshInputAssist();
          } else {
@@ -246,15 +264,19 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_BACK_SPACE:
-               // TODO 지우기 전 단어 길이(px) 조사해서 지우고 난 뒤의 길이와 비교, 그 차이만큼 왼쪽으로 이동시켜서 보정해줘야함
-               this.refreshInputAssist();
-               this.backspaceCommitted();
+               if (this.commBufPos <= 0) {
+                  this.hideInputAssist();
+                  this.initWordBuffers();
+               } else {
+                  this.refreshInputAssist();
+                  this.backspaceCommitted();
+               }
                break;
 
             case KeyEvent.VK_ENTER:
                if (this.popupBox.isShowing()) {
                   // 단어를 입력 중인데 캐럿 위치가 단어의 끝이 아니라면 엔터를 입력시 줄바꿈을 하지 않고, 단어의 끝으로 캐럿을 위치시킨다.
-                  this.moveCaretAfterWord(getWordToSearch());
+                  this.moveCaretAfterWord(this.getWordToSearch());
                   e.consume();
                }
                //$FALL-THROUGH$
@@ -279,8 +301,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                         int length = this.getWordToSearch().length();
                         AttributeSet attrSet = this.editor.getInputAttributes();
                         try {
-                           this.editor.getDocument().remove(wordStartedCaretPos, length);
-                           this.editor.getDocument().insertString(wordStartedCaretPos,
+                           this.editor.getDocument().remove(this.wordStartedCaretPos, length);
+                           this.editor.getDocument().insertString(this.wordStartedCaretPos,
                                  wordToReplace, attrSet);
                         } catch (BadLocationException e1) {
                            e1.printStackTrace();
@@ -359,7 +381,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          this.commBuf.append(ch);
       else {
          this.commBuf.insert(this.commBufPos, ch);
-         if (keyCode != KeyEvent.VK_LEFT)
+         if (this.keyCode != KeyEvent.VK_LEFT)
             this.commBufPos++;
       }
    }
@@ -442,7 +464,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void moveCaretAfterWord(String word) {
       System.out.println("<<moveCaretAfterWord>>");
-      this.editor.setCaretPosition(wordStartedCaretPos + word.length());
+      this.editor.setCaretPosition(this.wordStartedCaretPos + word.length());
    }
 
    /**
@@ -456,7 +478,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       switch (this.keyCode) {
          case KeyEvent.VK_LEFT:
             System.out.println("LEFT KEY PRESSED!");
-            if (uncommBuf.length() <= 0)
+            if (this.uncommBuf.length() <= 0)
                this.commBufPos--;
             else {
                this.commBufPos++;
@@ -539,7 +561,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void refreshPopupLocation() {
       try {
-         Rectangle anchor = this.editor.modelToView(wordStartedCaretPos);
+         Rectangle anchor = this.editor.modelToView(this.wordStartedCaretPos);
          this.popupBox.setLocation(anchor.x, anchor.y + anchor.height + 2);
       } catch (BadLocationException e) {
          e.printStackTrace();
@@ -568,7 +590,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          System.out.print("Caret Pos: " + this.getCaretPos());
          System.out.println(", real caret pos: " + this.editor.getCaretPosition());
          // Rectangle rect = this.editor.modelToView(this.getCaretPos());
-         Rectangle rect = this.editor.modelToView(wordStartedCaretPos);
+         Rectangle rect = this.editor.modelToView(this.wordStartedCaretPos);
          System.out.println(rect);
          rect.setSize(widthAll, rect.height);
          System.out.println(rect);
@@ -594,7 +616,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void showInputAssist() {
       if (!this.wordBox.isShowing())
-         wordStartedCaretPos = this.editor.getCaretPosition();
+         this.wordStartedCaretPos = this.editor.getCaretPosition();
       this.refreshPopupLocation();
       this.refreshWordList();
       if (this.popupList.getModel().getSize() > 0) {
