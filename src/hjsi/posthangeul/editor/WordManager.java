@@ -89,6 +89,8 @@ public class WordManager {
                if (isKoreanAlphabet(input)) {
                   // 1. 저장된 문자열의 초성과 다른 경우, 그 다음 글자는 볼 필요도 없음
                   if (input != getInitial(str.charAt(index))) {
+                     if (matchingWords.contains(str))
+                        matchingWords.remove(str);
                      System.out.println("case 1");
                      break;
                   }
