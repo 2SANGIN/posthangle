@@ -49,6 +49,18 @@ public class PostHangeulApp {
       mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       mainWindow.setLocationRelativeTo(null);
       mainWindow.setVisible(true);
+      PostHangeulApp temp = this;
+      
+      getWindow().addWindowListener(new WindowAdapter()
+      {
+         @Override
+         public void windowClosing(WindowEvent ev) {
+            if (getEditor().getTextPane().getDocument().getLength() > 0) {
+               FileSaveAction save = new FileSaveAction(temp, false);
+               save.askSave(new ActionEvent(getWindow(), ActionEvent.ACTION_PERFORMED, "Exit")); 
+            }
+         }
+      });
 
       keyCodeViewer = new KeyCodeViewer(mainWindow, "KeyCode Viewer", false);
    }
@@ -57,17 +69,7 @@ public class PostHangeulApp {
       new HangeulAssembler(); // 테스트 코드 출력용
       PostHangeulApp app = new PostHangeulApp();
       app.editor.requestFocus();
-      
-      app.getWindow().addWindowListener(new WindowAdapter()
-      {
-         @Override
-         public void windowClosing(WindowEvent ev) {
-            if (app.getEditor().getTextPane().getDocument().getLength() > 0) {
-               FileSaveAction save = new FileSaveAction(app, false);
-               save.askSave(new ActionEvent(app.getWindow(), ActionEvent.ACTION_PERFORMED, "Exit")); 
-            }
-         }
-      });
+           
    }
 
    /**
@@ -92,4 +94,5 @@ public class PostHangeulApp {
    public SwiftEditor getEditor() {
       return editor;
    }
+      
 }
