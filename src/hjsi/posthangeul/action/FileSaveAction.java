@@ -1,5 +1,6 @@
 package hjsi.posthangeul.action;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.io.IOException;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
@@ -32,7 +34,7 @@ public class FileSaveAction extends StyledEditorKit.StyledTextAction {
       fileChooser.setDialogTitle("다른 이름으로 저장하기");
     else
       fileChooser.setDialogTitle("새로 저장하기");
-
+    
   }
 
   @Override
@@ -80,4 +82,18 @@ public class FileSaveAction extends StyledEditorKit.StyledTextAction {
 
     editor.requestFocus();
   }
+  
+  public void askSave(ActionEvent e) {
+     JEditorPane editor = getEditor(e);
+     
+     if (editor.getDocument().getLength() > 0) {
+        int result = JOptionPane.showConfirmDialog((Component) null, "Do you want to save?",
+              "save", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+              actionPerformed(e);
+        }
+           
+     }
+  }
+  
 }

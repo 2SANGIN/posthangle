@@ -1,14 +1,19 @@
 package hjsi.posthangeul.window;
 
+import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 
 import javax.swing.JFrame;
+
 
 public class PostHangeulApp {
    JFrame mainWindow;
@@ -52,6 +57,17 @@ public class PostHangeulApp {
       new HangeulAssembler(); // 테스트 코드 출력용
       PostHangeulApp app = new PostHangeulApp();
       app.editor.requestFocus();
+      
+      app.getWindow().addWindowListener(new WindowAdapter()
+      {
+         @Override
+         public void windowClosing(WindowEvent ev) {
+            if (app.getEditor().getTextPane().getDocument().getLength() > 0) {
+               FileSaveAction save = new FileSaveAction(app, false);
+               save.askSave(new ActionEvent(app.getWindow(), ActionEvent.ACTION_PERFORMED, "Exit")); 
+            }
+         }
+      });
    }
 
    /**

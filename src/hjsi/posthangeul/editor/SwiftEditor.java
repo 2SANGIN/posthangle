@@ -112,4 +112,8 @@ public class SwiftEditor extends JPanel {
       Font font = new Font(fontFamily, Font.PLAIN, size);
       textPane.setFont(font);
    }
+   
+   public JTextPane getTextPane() {
+      return textPane;
+   }
 }
