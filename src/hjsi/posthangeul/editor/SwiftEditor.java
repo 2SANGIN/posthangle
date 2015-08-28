@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JPanel;
@@ -17,16 +19,19 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
+import hjsi.posthangeul.window.Helper;
+
 public class SwiftEditor extends JPanel {
    private static final long serialVersionUID = 8037738001573590413L;
    AutoComplete autocomplete;
    GoToLine gotoline;
+   Helper helper;
    TextLineNumber linenum;
    RemoveLine remove;
    JScrollPane scrollPane;
    SwitchLine switchLine;
    JTextPane textPane;
-   UndoManager undo = new UndoManager();
+   UndoManager undo;
 
    {
       textPane = new JTextPane();
@@ -35,7 +40,34 @@ public class SwiftEditor extends JPanel {
       linenum = new TextLineNumber(textPane);
       gotoline = new GoToLine(textPane);
       remove = new RemoveLine(textPane);
+      undo = new UndoManager();
       switchLine = new SwitchLine(textPane);
+      helper = new Helper(textPane);
+      this.addComponentListener(new ComponentListener() {
+
+         @Override
+         public void componentHidden(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+
+         @Override
+         public void componentMoved(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+
+         @Override
+         public void componentResized(ComponentEvent e) {
+            helper.refreshLocation();
+         }
+
+         @Override
+         public void componentShown(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+      });
       linenum.setBackground(Color.WHITE);
       scrollPane.setRowHeaderView(linenum);
 
@@ -96,6 +128,10 @@ public class SwiftEditor extends JPanel {
 
    public String getFontFamily() {
       return textPane.getFont().getFamily();
+   }
+
+   public JTextPane getTextPane() {
+      return textPane;
    }
 
    /*

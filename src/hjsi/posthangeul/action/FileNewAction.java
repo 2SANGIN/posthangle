@@ -19,6 +19,8 @@ public class FileNewAction extends StyledTextAction {
 
    @Override
    public void actionPerformed(ActionEvent e) {
+      FileSaveAction save = new FileSaveAction(app, false);
+      save.askSave(e);
       app.getWindow().dispose();
 
       app = new PostHangeulApp();
