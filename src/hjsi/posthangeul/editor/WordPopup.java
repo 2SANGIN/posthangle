@@ -93,17 +93,6 @@ public class WordPopup extends JScrollPane implements ListCellRenderer<JLabel> {
       value.setEnabled(list.isEnabled());
       value.setFont(list.getFont());
 
-      if (isSelected) {
-         value.setBackground(Color.CYAN);
-         value.setForeground(Color.BLACK);
-      } else if (cellHasFocus) {
-         value.setBackground(list.getSelectionBackground());
-         value.setForeground(list.getForeground());
-      } else {
-         value.setBackground(Color.WHITE);
-         value.setForeground(Color.BLACK);
-      }
-
       return value;
    }
 
@@ -133,8 +122,12 @@ public class WordPopup extends JScrollPane implements ListCellRenderer<JLabel> {
             index = (getSelectedIndex() + getListSize() - 1) % getListSize();
          else if (keyCode == KeyEvent.VK_DOWN)
             index = (getSelectedIndex() + 1) % getListSize();
+
+         wordList.getSelectedValue().setBackground(Color.WHITE);
       }
       setSelectedIndex(index);
+      wordList.getSelectedValue().setBackground(Color.LIGHT_GRAY);
+      wordList.getSelectedValue().repaint();
    }
 
    public void setBackgroundColorAll(Color bg) {
@@ -185,5 +178,6 @@ public class WordPopup extends JScrollPane implements ListCellRenderer<JLabel> {
          System.out.println(size);
          this.setSize(size.width, size.height);
       }
+      wordList.setVisible(true);
    }
 }

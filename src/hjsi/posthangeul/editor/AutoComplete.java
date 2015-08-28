@@ -164,7 +164,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       this.wordPopup = new WordPopup();
       this.wordPopup.setOpaque(true);
-      this.wordPopup.setBackgroundColorAll(textPane.getBackground());
+      // this.wordPopup.setBackgroundColorAll(textPane.getBackground());
       this.wordPopup.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
       this.wordPopup.setBounds(40, 40, 100, 100);
       this.wordPopup.setVisible(false);
