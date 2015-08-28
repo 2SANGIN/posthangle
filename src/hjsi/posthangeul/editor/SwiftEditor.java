@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JPanel;
@@ -23,13 +25,13 @@ public class SwiftEditor extends JPanel {
    private static final long serialVersionUID = 8037738001573590413L;
    AutoComplete autocomplete;
    GoToLine gotoline;
+   Helper helper;
    TextLineNumber linenum;
    RemoveLine remove;
    JScrollPane scrollPane;
    SwitchLine switchLine;
    JTextPane textPane;
    UndoManager undo;
-   Helper helper;
 
    {
       textPane = new JTextPane();
@@ -41,6 +43,31 @@ public class SwiftEditor extends JPanel {
       undo = new UndoManager();
       switchLine = new SwitchLine(textPane);
       helper = new Helper(textPane);
+      this.addComponentListener(new ComponentListener() {
+
+         @Override
+         public void componentHidden(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+
+         @Override
+         public void componentMoved(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+
+         @Override
+         public void componentResized(ComponentEvent e) {
+            helper.refreshLocation();
+         }
+
+         @Override
+         public void componentShown(ComponentEvent e) {
+            // TODO Auto-generated method stub
+
+         }
+      });
       linenum.setBackground(Color.WHITE);
       scrollPane.setRowHeaderView(linenum);
 
@@ -103,6 +130,10 @@ public class SwiftEditor extends JPanel {
       return textPane.getFont().getFamily();
    }
 
+   public JTextPane getTextPane() {
+      return textPane;
+   }
+
    /*
     * (non-Javadoc)
     * 
@@ -116,9 +147,5 @@ public class SwiftEditor extends JPanel {
    public void setFont(String fontFamily, int size) {
       Font font = new Font(fontFamily, Font.PLAIN, size);
       textPane.setFont(font);
-   }
-   
-   public JTextPane getTextPane() {
-      return textPane;
    }
 }

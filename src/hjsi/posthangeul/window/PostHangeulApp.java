@@ -1,10 +1,5 @@
 package hjsi.posthangeul.window;
 
-import hjsi.posthangeul.action.FileSaveAction;
-import hjsi.posthangeul.editor.HangeulAssembler;
-import hjsi.posthangeul.editor.SwiftEditor;
-import hjsi.posthangeul.editor.VisibleCaretListener;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -14,17 +9,30 @@ import java.io.File;
 
 import javax.swing.JFrame;
 
+import hjsi.posthangeul.action.FileSaveAction;
+import hjsi.posthangeul.editor.HangeulAssembler;
+import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
+
 
 public class PostHangeulApp {
+   public static void main(String[] args) {
+      new HangeulAssembler(); // 테스트 코드 출력용
+      PostHangeulApp app = new PostHangeulApp();
+      app.editor.requestFocus();
+
+   }
+
    JFrame mainWindow;
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
-   SwiftEditor editor;
 
+   SwiftEditor editor;
    /* config of app instance */
    File currentFile = new File("제목 없음.rtf");
    String[] defaultFontFamilies = {"나눔바른고딕", "나눔고딕", "맑은 고딕", "새굴림", "굴림"};
    int[] predefinedFontSizes = {9, 12, 16, 22};
+
    int defaultFontSize = predefinedFontSizes[1];
 
    public PostHangeulApp() {
@@ -49,15 +57,13 @@ public class PostHangeulApp {
       mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       mainWindow.setLocationRelativeTo(null);
       mainWindow.setVisible(true);
-      PostHangeulApp temp = this;
-      
-      getWindow().addWindowListener(new WindowAdapter()
-      {
+
+      getWindow().addWindowListener(new WindowAdapter() {
          @Override
          public void windowClosing(WindowEvent ev) {
             if (getEditor().getTextPane().getDocument().getLength() > 0) {
-               FileSaveAction save = new FileSaveAction(temp, false);
-               save.askSave(new ActionEvent(getWindow(), ActionEvent.ACTION_PERFORMED, "Exit")); 
+               FileSaveAction save = new FileSaveAction(PostHangeulApp.this, false);
+               save.askSave(new ActionEvent(getWindow(), ActionEvent.ACTION_PERFORMED, "Exit"));
             }
          }
       });
@@ -65,18 +71,19 @@ public class PostHangeulApp {
       keyCodeViewer = new KeyCodeViewer(mainWindow, "KeyCode Viewer", false);
    }
 
-   public static void main(String[] args) {
-      new HangeulAssembler(); // 테스트 코드 출력용
-      PostHangeulApp app = new PostHangeulApp();
-      app.editor.requestFocus();
-           
-   }
-
    /**
     * @return the currentFile
     */
    public File getCurrentFile() {
       return this.currentFile;
+   }
+
+   public SwiftEditor getEditor() {
+      return editor;
+   }
+
+   public JFrame getWindow() {
+      return mainWindow;
    }
 
    /**
@@ -87,12 +94,4 @@ public class PostHangeulApp {
       mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
    }
 
-   public JFrame getWindow() {
-      return mainWindow;
-   }
-
-   public SwiftEditor getEditor() {
-      return editor;
-   }
-      
 }

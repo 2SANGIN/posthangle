@@ -3,6 +3,7 @@ package hjsi.posthangeul.window;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -23,8 +24,8 @@ import javax.swing.JTextPane;
 public class Helper extends JPanel implements KeyListener {
    private static Image bi;
 
-   private JTextPane editor;
    private JButton close;
+   private JTextPane editor;
    private JLabel text;
 
    public Helper(JTextPane textPane) {
@@ -65,18 +66,26 @@ public class Helper extends JPanel implements KeyListener {
             editor.requestFocus();
          }
       });
-
    }
 
+   @Override
    public void keyPressed(KeyEvent ke) {
       if (ke.getKeyCode() == KeyEvent.VK_F1) {
-         if (ke.isControlDown())
-            setVisible(true);
+         if (ke.isControlDown() || ke.isAltDown()) {
+            if (!isShowing()) {
+               refreshLocation();
+               setVisible(true);
+            } else {
+               setVisible(false);
+            }
+         }
       }
    }
 
-   public void mouseClicked(MouseEvent e) {
-      this.removeAll();
+   @Override
+   public void keyReleased(KeyEvent e) {
+      // TODO Auto-generated method stub
+
    }
 
    @Override
@@ -84,9 +93,13 @@ public class Helper extends JPanel implements KeyListener {
       // TODO Auto-generated method stub
    }
 
-   @Override
-   public void keyReleased(KeyEvent e) {
-      // TODO Auto-generated method stub
+   public void mouseClicked(MouseEvent e) {
+      this.removeAll();
+   }
 
+   public void refreshLocation() {
+      Point p = new Point(0, editor.getHeight() - this.getHeight());
+      this.setLocation(p);
+      repaint();
    }
 }
