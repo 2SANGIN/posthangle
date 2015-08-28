@@ -108,6 +108,11 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private final JTextPane editor;
 
    /**
+    * 자동완성 단어 목록을 보여주는 팝업
+    */
+   private final WordPopupList popup;
+
+   /**
     * 현재 처리 중인 keyChar
     */
    private char keyChar;
@@ -205,12 +210,25 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.popupBox.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
       this.popupBox.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
+
+      /* 워드팝업 설정 */
+      this.popup = new WordPopupList();
+      WordItem[] items =
+            new WordItem[] {new WordItem("hello"), new WordItem("hello"), new WordItem("hello"),
+                  new WordItem("hello"), new WordItem("hello"), new WordItem("hello"),
+                  new WordItem("hello"), new WordItem("hello"), new WordItem("hello")};
+      this.popup.setListData(items);
+      JScrollPane sp = new JScrollPane(this.popup);
+      sp.setBounds(120, 120, 200, 200);
+
       /* 에디터 설정 */
       this.editor = textPane;
       this.editor.addKeyListener(this);
       this.editor.addInputMethodListener(this);
       this.editor.add(this.popupBox);
       this.editor.add(this.wordBox);
+      this.editor.add(sp);
+      this.editor.repaint();
    }
 
    @Override
@@ -673,7 +691,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       if (numRows <= 0) {
          this.popupBox.setVisible(false);
       } else {
-         FontMetrics listMetrics = popupList.getGraphics().getFontMetrics();
+         FontMetrics listMetrics = this.popupList.getGraphics().getFontMetrics();
          int maxWidth = 0;
          for (int i = 0; i < numRows; i++) {
             maxWidth = Math.max(maxWidth, listMetrics.stringWidth(matchings.get(i)));
