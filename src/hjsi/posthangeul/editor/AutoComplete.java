@@ -218,10 +218,16 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          System.out.println("it's null! \n");
       }
 
-      if (this.isShowingInputAssist()) {
-         this.refreshInputAssist();
-      } else
-         this.showInputAssist();
+      if (str.getEndIndex() > 1) {
+         this.wordManager.countWord(getWordToSearch());
+         this.hideInputAssist();
+         this.initWordBuffers();
+      } else {
+         if (this.isShowingInputAssist()) {
+            this.refreshInputAssist();
+         } else
+            this.showInputAssist();
+      }
    }
 
    @Override
@@ -591,9 +597,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          System.out.println(", real caret pos: " + this.editor.getCaretPosition());
          // Rectangle rect = this.editor.modelToView(this.getCaretPos());
          Rectangle rect = this.editor.modelToView(this.wordStartedCaretPos);
-         System.out.println(rect);
+         // System.out.println(rect);
          rect.setSize(widthAll, rect.height);
-         System.out.println(rect);
+         // System.out.println(rect);
          this.wordBox.setBounds(rect);
       } catch (BadLocationException e) {
          e.printStackTrace();
