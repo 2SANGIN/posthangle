@@ -13,7 +13,6 @@ import java.text.AttributedCharacterIterator;
 
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -163,12 +162,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.initWordBuffers();
 
       this.wordPopup = new WordPopup();
-      this.wordPopup.setOpaque(true);
-      // this.wordPopup.setBackgroundColorAll(textPane.getBackground());
-      this.wordPopup.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
-      this.wordPopup.setBounds(40, 40, 100, 100);
       this.wordPopup.setVisible(false);
-      refreshWordList();
 
       /* 에디터 설정 */
       this.editor = textPane;
@@ -201,20 +195,20 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             System.out.println("uncommitted : " + this.uncommBuf);
          }
          System.out.println(this.logString());
+
+         if (str.getEndIndex() > 1) {
+            this.wordManager.countWord(this.getWordToSearch());
+            this.hideInputAssist();
+            this.initWordBuffers();
+         } else {
+            if (this.isShowingInputAssist()) {
+               this.refreshInputAssist();
+            } else
+               this.showInputAssist();
+         }
       } else {
          this.initUncommittedBuffer();
          System.out.println("it's null! \n");
-      }
-
-      if (str.getEndIndex() > 1) {
-         this.wordManager.countWord(getWordToSearch());
-         this.hideInputAssist();
-         this.initWordBuffers();
-      } else {
-         if (this.isShowingInputAssist()) {
-            this.refreshInputAssist();
-         } else
-            this.showInputAssist();
       }
    }
 
@@ -313,7 +307,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                      this.wordManager.countWord(wordToReplace);
                      this.moveCaretAfterWord(wordToReplace);
                      e.consume();
-                  } else if (commBufPos == this.getWordToSearch().length()) {
+                  } else if (this.commBufPos == this.getWordToSearch().length()) {
                      this.wordManager.countWord(this.getWordToSearch());
                   }
                }
@@ -507,7 +501,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          case KeyEvent.VK_UP:
          case KeyEvent.VK_DOWN:
             if (this.isShowingInputAssist()) {
-               wordPopup.moveSelection(this.keyCode);
+               this.wordPopup.moveSelection(this.keyCode);
                e.consume();
             } else {
                this.hideInputAssist();
@@ -543,8 +537,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * 워드박스의 위치, 크기를 재계산하고 단어 리스트를 다시 가져온다.
     */
    private void refreshInputAssist() {
-      this.refreshWordList();
       this.refreshWordBox();
+      this.refreshWordList();
+      this.wordPopup.redraw();
    }
 
    /**
@@ -600,7 +595,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          this.wordStartedCaretPos = this.editor.getCaretPosition();
       this.refreshPopupLocation();
       if (this.refreshWordList() > 0) {
-         this.wordPopup.setVisible(true);
+         this.wordPopup.showPopup();
+         this.wordPopup.redraw();
       }
       this.refreshWordBox();
       this.wordBox.setVisible(true);
@@ -625,8 +621,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @return 가져온 단어의 총 갯수를 반환한다.
     */
    int refreshWordList() {
-      this.wordPopup.setWordList(this.wordManager.getMatchingWords(getWordToSearch()));
-      this.wordPopup.repaint();
-      return this.wordPopup.getListSize();
+      this.wordPopup.setWordList(this.wordManager.getMatchingWords(this.getWordToSearch()));
+      return this.wordPopup.getRowCount();
    }
 }

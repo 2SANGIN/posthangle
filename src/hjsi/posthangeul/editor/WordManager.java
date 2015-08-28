@@ -75,6 +75,8 @@ public class WordManager {
          if (str.length() < inputWord.length())
             continue;
 
+         else if (str.startsWith(inputWord) || (inputWord.length() == 0))
+            matchingWords.add(str);
 
          // 초성을 포함하는지
          // matching words에는 완성된 글자만 들어가있음
@@ -85,11 +87,11 @@ public class WordManager {
             for (int index = 0; index < inputWord.length(); index++) {
                char input = inputWord.charAt(index);
                System.out.println("input length" + inputWord.length());
-               
+
                // 초성만 입력
                if (this.isKoreanAlphabet(input)) {
                   // 1. 저장된 문자열의 초성과 다른 경우, 그 다음 글자는 볼 필요도 없음
-                  if (input != getInitial(str.charAt(index))) {
+                  if (input != this.getInitial(str.charAt(index))) {
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      System.out.println("case 1");
@@ -97,39 +99,40 @@ public class WordManager {
                   }
                   if (matchingWords.contains(str) == false)
                      matchingWords.add(str);
-               } 
-               
+               }
+
                // 초성+중성 혹은 초성+중성+종성
-               else if (isKorean(input)) {
+               else if (this.isKorean(input)) {
                   // 2. 초성끼리 비교해서 다르면 그 다음 글자는 볼 필요도 없음
-                  if (getInitial(input) != getInitial(str.charAt(index))) {
+                  if (this.getInitial(input) != this.getInitial(str.charAt(index))) {
                      System.out.println("case 2");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 3. 중성끼리 비교해서 다르면 그 다음 글자는 볼 필요도 없음
-                  else if (getMedial(input) != getMedial(str.charAt(index))) {
+                  else if (this.getMedial(input) != this.getMedial(str.charAt(index))) {
                      System.out.println("case 3");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 4. 둘다 종성이 있는데 다르면 그 다음 글자는 볼 필요도 없음
-                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) != 0 && getFinal(input) != getFinal(str.charAt(index))) {
+                  else if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) != 0
+                        && this.getFinal(input) != this.getFinal(str.charAt(index))) {
                      System.out.println("case 4");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 5. input은 종성이 있고 str은 종성이 없는 경우
-                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) == 0) {
+                  else if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) == 0) {
                      // input의 종성이 str 다음 글자의 초성과 다른 경우
                      if (inputWord.length() < str.length()) {
-                        if (getFinal(input) != getInitial(str.charAt(index + 1))) {
+                        if (this.getFinal(input) != this.getInitial(str.charAt(index + 1))) {
                            System.out.println("case 5");
                            if (matchingWords.contains(str))
                               matchingWords.remove(str);
@@ -142,8 +145,6 @@ public class WordManager {
                }
             }
          }
-         else if (str.startsWith(inputWord) || (inputWord.length() == 0))
-            matchingWords.add(str);
       }
       matchingWords.sort(this.getWordComparator());
       return matchingWords;
@@ -165,7 +166,7 @@ public class WordManager {
 
    /**
     * 메모리에 저장된 단어를 카운트 수에 상관 없이 제거한다.
-    * 
+    *
     * @param targetWord 제거할 단어
     */
    public void removeWord(String targetWord) {
