@@ -16,7 +16,7 @@ import javax.swing.JToolBar;
 
 import recorder.SoundRecordingUtil;
 
-
+// 녹음기 개발
 public class Recorder extends JPanel {
    JToolBar toolbar;
    JButton start;
