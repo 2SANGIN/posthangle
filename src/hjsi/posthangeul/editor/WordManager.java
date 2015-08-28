@@ -11,8 +11,9 @@ public class WordManager {
    /**
     * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
     */
-   private final Comparator<String> wordComparator = (o1, o2) -> (this.getWordCounter().get(o2)
-         .intValue() - this.getWordCounter().get(o1).intValue());
+   private final Comparator<String> wordComparator =
+         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
+               - this.getWordCounter().get(o1).intValue());
 
    private Map<String, Integer> wordCounter;
 
@@ -79,14 +80,14 @@ public class WordManager {
          // matching words에는 완성된 글자만 들어가있음
          // inputWords에는 영어 / 초성 / 완성된한글 의 조합들로 구성
 
-         else if (isKorean(str)) {
+         else if (this.isKorean(str)) {
             // index 문자열 한 글자씩 쪼개서 비교
             for (int index = 0; index < inputWord.length(); index++) {
                char input = inputWord.charAt(index);
                System.out.println("input length" + inputWord.length());
                
                // 초성만 입력
-               if (isKoreanAlphabet(input)) {
+               if (this.isKoreanAlphabet(input)) {
                   // 1. 저장된 문자열의 초성과 다른 경우, 그 다음 글자는 볼 필요도 없음
                   if (input != getInitial(str.charAt(index))) {
                      if (matchingWords.contains(str))
@@ -163,10 +164,23 @@ public class WordManager {
    }
 
    /**
+    * 메모리에 저장된 단어를 카운트 수에 상관 없이 제거한다.
+    * 
+    * @param targetWord 제거할 단어
+    */
+   public void removeWord(String targetWord) {
+      this.wordCounter.remove(targetWord);
+   }
+
+   /**
     * @param wordCounter the wordCounter to set
     */
    public void setWordCounter(Map<String, Integer> wordCounter) {
       this.wordCounter = wordCounter;
+   }
+
+   private char getFinal(char ch) {
+      return PostIME.getFinalChar(PostIME.getFinalIndex(ch));
    }
 
    private char getInitial(char ch) {
@@ -177,10 +191,6 @@ public class WordManager {
       return PostIME.getMedialChar(PostIME.getMedialIndex(ch));
    }
 
-   private char getFinal(char ch) {
-      return PostIME.getFinalChar(PostIME.getFinalIndex(ch));
-   }
-
    /**
     * if it has no final, return 0
     */
@@ -188,12 +198,12 @@ public class WordManager {
       return PostIME.getFinalIndex(ch);
    }
 
-   private boolean isKorean(String str) {
-      return AutoComplete.isKorean(str);
-   }
-
    private boolean isKorean(char ch) {
       return AutoComplete.isKorean(ch);
+   }
+
+   private boolean isKorean(String str) {
+      return AutoComplete.isKorean(str);
    }
 
    private boolean isKoreanAlphabet(char ch) {
