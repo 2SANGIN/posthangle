@@ -1,5 +1,10 @@
 package hjsi.posthangeul.window;
 
+import hjsi.posthangeul.action.FileSaveAction;
+import hjsi.posthangeul.editor.HangeulAssembler;
+import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -7,12 +12,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-
-import hjsi.posthangeul.action.FileSaveAction;
-import hjsi.posthangeul.editor.HangeulAssembler;
-import hjsi.posthangeul.editor.SwiftEditor;
-import hjsi.posthangeul.editor.VisibleCaretListener;
+import javax.swing.JPanel;
 
 
 public class PostHangeulApp {
@@ -23,9 +25,11 @@ public class PostHangeulApp {
 
    }
 
+   JPanel topMenu;
    JFrame mainWindow;
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
+   Recorder recorder;
 
    SwiftEditor editor;
    /* config of app instance */
@@ -39,9 +43,16 @@ public class PostHangeulApp {
       mainWindow = new JFrame();
       mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
 
+      topMenu = new JPanel();
+      topMenu.setLayout(new BoxLayout(topMenu, BoxLayout.Y_AXIS));
+
       /* create menu */
       shortcuts = new Shortcut(this, 24);
-      mainWindow.getContentPane().add(shortcuts, BorderLayout.NORTH);
+      recorder = new Recorder(this, 24);
+      topMenu.add(shortcuts);
+      topMenu.add(recorder);
+
+      mainWindow.getContentPane().add(topMenu, BorderLayout.NORTH);
       mainWindow.getContentPane().add(new FileTree(new File(".")), BorderLayout.WEST);
 
       /* add editor */
