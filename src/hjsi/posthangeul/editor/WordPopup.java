@@ -199,16 +199,29 @@ public class WordPopup extends JScrollPane {
     * @return 선택된 단어가 있으면 String 객체, 아니라면 null
     */
    public String getSelectedWord() {
-      if (this.isSelectionEmpty())
-         return null;
-      return this.getLabel(this.getSelectedIndex()).getText();
+      return this.getWord(this.getSelectedIndex());
    }
 
    /**
+    * 인덱스에 해당하는 단어를 가져온다.
+    *
+    * @param index 가져올 단어의 인덱스
+    * @return 인덱스에 해당하는 단어가 있으면 String 객체, 없으면 null
+    */
+   public String getWord(int index) {
+      if (index >= 0 && index < this.getRowCount())
+         return this.getLabel(index).getText();
+      return null;
+   }
+
+   /**
+    * 만들어야한다
+    *
     * @param e
     * @return
     */
    public int getXButtonIndex(MouseEvent e) {
+      // TODO 만들어야 함!
       return this.getSelectedIndex();
    }
 
@@ -315,6 +328,14 @@ public class WordPopup extends JScrollPane {
          throw new IndexOutOfBoundsException("주어진 매개변수가 리스트의 범위를 벗어남.");
    }
 
+   @Override
+   public void setVisible(boolean aFlag) {
+      this.clearSelection();
+      this.clearHover();
+      this.redraw();
+      super.setVisible(aFlag);
+   }
+
    /**
     * 팝업 목록에 단어를 설정한다.
     *
@@ -329,13 +350,6 @@ public class WordPopup extends JScrollPane {
       for (JPanel item : this.items) {
          this.wrapper.add(item);
       }
-   }
-
-   /**
-    * 단어 목록 팝업을 보여준다.
-    */
-   public void showPopup() {
-      this.setVisible(true);
    }
 
    /**
@@ -366,8 +380,8 @@ public class WordPopup extends JScrollPane {
    /**
     * WordItem을 생성한다.
     *
-    * @param text
-    * @return
+    * @param text 단어 텍스트
+    * @return 단어와 삭제 버튼으로 구성된 한 패널을 반환한다.
     */
    private JPanel createWordItem(String text) {
       JPanel item = new JPanel();
@@ -428,13 +442,14 @@ public class WordPopup extends JScrollPane {
    }
 
    /**
-    * @param index
-    * @return
+    * 인덱스에 해당하는 단어 JLabel 객체를 가져온다.
+    *
+    * @param index 가져올 라벨의 인덱스
+    * @return 인덱스에 해당하는 라벨이 있으면 JLabel 객체, 없으면 null;
     */
    private JLabel getLabel(int index) {
-      if (index >= 0 && index < this.getRowCount()) {
+      if (index >= 0 && index < this.getRowCount())
          return (JLabel) this.items.get(index).getComponent(0);
-      }
       return null;
    }
 }

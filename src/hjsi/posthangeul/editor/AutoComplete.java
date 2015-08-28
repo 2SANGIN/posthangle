@@ -9,6 +9,8 @@ import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.AttributedCharacterIterator;
 
 import javax.swing.JPanel;
@@ -166,11 +168,20 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       /* 에디터 설정 */
       this.editor = textPane;
-      this.editor.addKeyListener(this);
-      this.editor.addInputMethodListener(this);
       this.editor.add(this.wordPopup);
       this.editor.add(this.wordBox);
       this.editor.repaint();
+
+      this.editor.addKeyListener(this);
+      this.editor.addInputMethodListener(this);
+      this.editor.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseClicked(MouseEvent e) {
+            AutoComplete.this.hideInputAssist();
+            AutoComplete.this.initWordBuffers();
+            super.mouseClicked(e);
+         }
+      });
    }
 
    @Override
@@ -282,9 +293,37 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                   this.initWordBuffers();
                   this.hideInputAssist();
                } else {
-                  this.showInputAssist();
+                  if (this.isShowingInputAssist()) {
+                     String wordToReplace = this.wordPopup.getSelectedWord();
+                     if (wordToReplace == null)
+                        wordToReplace = this.wordPopup.getWord(0);
+
+                     if (wordToReplace != null) {
+                        if (this.getWordToSearch().compareTo(wordToReplace) != 0) {
+                           /* replace */
+                           int length = this.getWordToSearch().length();
+                           AttributeSet attrSet = this.editor.getInputAttributes();
+                           try {
+                              this.editor.getDocument().remove(this.wordStartedCaretPos, length);
+                              this.editor.getDocument().insertString(this.wordStartedCaretPos,
+                                    wordToReplace, attrSet);
+                           } catch (BadLocationException e1) {
+                              e1.printStackTrace();
+                           }
+                        }
+                        /* count */
+                        this.wordManager.countWord(wordToReplace);
+                        this.moveCaretAfterWord(wordToReplace);
+                        e.consume();
+                     } else if (this.commBufPos == this.getWordToSearch().length()) {
+                        this.wordManager.countWord(this.getWordToSearch());
+                     }
+                     this.initWordBuffers();
+                     this.hideInputAssist();
+                  } else {
+                     this.showInputAssist();
+                  }
                   e.consume();
-                  System.out.println("space!!");
                }
                break;
             case KeyEvent.VK_TAB:
@@ -425,27 +464,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    }
 
    /**
-    * 팝업박스와 워드박스를 보이지 않게 한다.
-    */
-   private void hideInputAssist() {
-      this.wordPopup.setVisible(false);
-      this.wordBox.setVisible(false);
-   }
-
-   /**
     * 조립글자 버퍼를 지우고 새 버퍼를 할당한다.
     */
    private void initUncommittedBuffer() {
       this.uncommBuf = new StringBuffer();
-   }
-
-   /**
-    * 완성글자 버퍼를 지우고 새 버퍼를 할당한다. 완성글자 캐럿 포지션도 초기화하고, 조립글자 버퍼도 초기화한다.
-    */
-   private void initWordBuffers() {
-      this.commBuf = new StringBuffer();
-      this.commBufPos = 0;
-      this.initUncommittedBuffer();
    }
 
    /**
@@ -461,7 +483,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @param word 캐럿 위치의 기준이 되는 단어
     */
    private void moveCaretAfterWord(String word) {
-      System.out.println("<<moveCaretAfterWord>>");
       this.editor.setCaretPosition(this.wordStartedCaretPos + word.length());
    }
 
@@ -595,8 +616,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          this.wordStartedCaretPos = this.editor.getCaretPosition();
       this.refreshPopupLocation();
       if (this.refreshWordList() > 0) {
-         this.wordPopup.showPopup();
-         this.wordPopup.redraw();
+         this.wordPopup.setVisible(true);
       }
       this.refreshWordBox();
       this.wordBox.setVisible(true);
@@ -613,6 +633,23 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       else {
          this.uncommBuf.append(ch);
       }
+   }
+
+   /**
+    * 팝업박스와 워드박스를 보이지 않게 한다.
+    */
+   void hideInputAssist() {
+      this.wordPopup.setVisible(false);
+      this.wordBox.setVisible(false);
+   }
+
+   /**
+    * 완성글자 버퍼를 지우고 새 버퍼를 할당한다. 완성글자 캐럿 포지션도 초기화하고, 조립글자 버퍼도 초기화한다.
+    */
+   void initWordBuffers() {
+      this.commBuf = new StringBuffer();
+      this.commBufPos = 0;
+      this.initUncommittedBuffer();
    }
 
    /**
