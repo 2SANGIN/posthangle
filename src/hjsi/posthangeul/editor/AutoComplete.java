@@ -1,8 +1,6 @@
 package hjsi.posthangeul.editor;
 
 import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Rectangle;
@@ -11,14 +9,9 @@ import java.awt.event.InputMethodEvent;
 import java.awt.event.InputMethodListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.text.AttributedCharacterIterator;
-import java.util.Vector;
 
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
@@ -110,7 +103,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    /**
     * 자동완성 단어 목록을 보여주는 팝업
     */
-   private final WordPopupList popup;
+   private final WordPopup wordPopup;
 
    /**
     * 현재 처리 중인 keyChar
@@ -122,10 +115,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private int keyCode;
 
-   /**
-    * 자동완성 단어를 보여줄 스크롤 박스
-    */
-   private final JScrollPane popupBox;
    /**
     * 조립 중인 한글을 위한 버퍼 (1글자 무조건)
     */
@@ -140,16 +129,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * 단어가 입력되기 시작한 caret position
     */
    private int wordStartedCaretPos;
-
-   /**
-    * 자동완성 단어를 삭제하게 해줄 버튼 리스트뷰
-    */
-   final JList<String> deleteList;
-
-   /**
-    * 자동완성 단어를 보여줄 스크롤 박스 안의 리스트뷰
-    */
-   final JList<String> popupList;
 
    /**
     * 사용자가 입력했던 단어들을 저장, 검색 등 관리해주는 매니저
@@ -169,65 +148,23 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @param textPane 자동완성 기능을 이용할 텍스트 에디터
     */
    public AutoComplete(JTextPane textPane) {
-      /* 기타 객체 생성 */
+      /* 버퍼 생성 */
       this.initWordBuffers();
 
-      /* popupBox 스크롤패널 내부 리스트뷰 설정 */
-      this.popupList = new JList<>();
-      this.popupList.setVisible(true);
-
-      /* popupBox 스크롤패널 내부 삭제 버튼 설정 */
-      this.deleteList = new JList<>();
-      this.deleteList.setVisible(true);
-      this.deleteList.setForeground(Color.LIGHT_GRAY);
-      this.deleteList.setFocusable(false);
-      this.deleteList.setSelectionBackground(this.deleteList.getBackground());
-      this.deleteList.setSelectionForeground(this.deleteList.getForeground());
-      this.deleteList.addMouseListener(new MouseAdapter() {
-         @Override
-         public void mouseClicked(MouseEvent e) {
-            String wordToRemove = AutoComplete.this.popupList.getModel()
-                  .getElementAt(AutoComplete.this.deleteList.getSelectedIndex());
-            System.out.println(wordToRemove);
-            AutoComplete.this.wordManager.removeWord(wordToRemove);
-            AutoComplete.this.refreshWordList();
-         }
-      });
-      this.deleteList.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-      /* 팝업리스트(단어) 및 삭제버튼 리스트를 묶음 */
-      JPanel listPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-      listPanel.setOpaque(true);
-      listPanel.setBackground(textPane.getBackground());
-      listPanel.add(this.popupList);
-      listPanel.add(this.deleteList);
-
-      /* scrollpane 설정 */
-      this.popupBox = new JScrollPane(listPanel);
-      this.popupBox.setVisible(false);
-      this.popupBox.setOpaque(true);
-      this.popupBox.setBackground(textPane.getBackground());
-      this.popupBox.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
-      this.popupBox.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-
-
-      /* 워드팝업 설정 */
-      this.popup = new WordPopupList();
-      WordItem[] items =
-            new WordItem[] {new WordItem("hello"), new WordItem("hello"), new WordItem("hello"),
-                  new WordItem("hello"), new WordItem("hello"), new WordItem("hello"),
-                  new WordItem("hello"), new WordItem("hello"), new WordItem("hello")};
-      this.popup.setListData(items);
-      JScrollPane sp = new JScrollPane(this.popup);
-      sp.setBounds(120, 120, 200, 200);
+      this.wordPopup = new WordPopup();
+      this.wordPopup.setOpaque(true);
+      this.wordPopup.setBackgroundColorAll(textPane.getBackground());
+      this.wordPopup.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
+      this.wordPopup.setBounds(40, 40, 100, 100);
+      this.wordPopup.setVisible(false);
+      refreshWordList();
 
       /* 에디터 설정 */
       this.editor = textPane;
       this.editor.addKeyListener(this);
       this.editor.addInputMethodListener(this);
-      this.editor.add(this.popupBox);
+      this.editor.add(this.wordPopup);
       this.editor.add(this.wordBox);
-      this.editor.add(sp);
       this.editor.repaint();
    }
 
@@ -291,10 +228,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          switch (this.keyCode) {
             case KeyEvent.VK_ESCAPE:
                if (this.wordBox.isShowing()) {
-                  if (this.popupList.getSelectedIndex() < 0)
+                  if (this.wordPopup.isSelectionEmpty())
                      this.hideInputAssist();
                   else
-                     this.popupList.clearSelection();
+                     this.wordPopup.clearSelection();
                } else
                   this.initWordBuffers();
                break;
@@ -311,7 +248,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_ENTER:
-               if (this.popupBox.isShowing()) {
+               if (this.wordPopup.isShowing()) {
                   // 단어를 입력 중인데 캐럿 위치가 단어의 끝이 아니라면 엔터를 입력시 줄바꿈을 하지 않고, 단어의 끝으로 캐럿을 위치시킨다.
                   this.moveCaretAfterWord(this.getWordToSearch());
                   e.consume();
@@ -330,11 +267,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
             case KeyEvent.VK_TAB:
                if (this.isShowingInputAssist()) {
-                  int index = this.popupList.getSelectedIndex();
-                  if (index < 0)
-                     index = 0;
-                  if (index < this.popupList.getModel().getSize()) {
-                     String wordToReplace = this.popupList.getModel().getElementAt(index);
+                  String wordToReplace = this.wordPopup.getSelectedWord();
+                  if (wordToReplace != null) {
                      if (this.getWordToSearch().compareTo(wordToReplace) != 0) {
                         /* replace */
                         int length = this.getWordToSearch().length();
@@ -351,7 +285,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                      this.wordManager.countWord(wordToReplace);
                      this.moveCaretAfterWord(wordToReplace);
                      e.consume();
-                  } else {
+                  } else if (commBufPos == this.getWordToSearch().length()) {
                      this.wordManager.countWord(this.getWordToSearch());
                   }
                }
@@ -373,6 +307,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       if (this.keyCode != KeyEvent.VK_ENTER && this.keyCode != KeyEvent.VK_SPACE)
          System.out.println(this.logString());
+
    }
 
    @Override
@@ -471,7 +406,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * 팝업박스와 워드박스를 보이지 않게 한다.
     */
    private void hideInputAssist() {
-      this.popupBox.setVisible(false);
+      this.wordPopup.setVisible(false);
       this.wordBox.setVisible(false);
    }
 
@@ -495,7 +430,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @return 현재 입력도우미가 보여지고 있으면 true, 아니라면 false
     */
    private boolean isShowingInputAssist() {
-      return this.popupBox.isShowing() && this.wordBox.isShowing();
+      return this.wordPopup.isShowing() && this.wordBox.isShowing();
    }
 
    /**
@@ -542,32 +477,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
             break;
 
          case KeyEvent.VK_UP:
-            if (this.isShowingInputAssist()) {
-               int index = this.popupList.getSelectedIndex();
-               if (index < 0)
-                  index = 0;
-               else {
-                  final int size = this.popupList.getModel().getSize();
-                  index = (index + size - 1) % size;
-               }
-               this.popupList.setSelectedIndex(index);
-               e.consume();
-            } else {
-               this.hideInputAssist();
-               this.initWordBuffers();
-            }
-            break;
-
          case KeyEvent.VK_DOWN:
             if (this.isShowingInputAssist()) {
-               int index = this.popupList.getSelectedIndex();
-               if (index < 0)
-                  index = 0;
-               else {
-                  final int size = this.popupList.getModel().getSize();
-                  index = (index + 1) % size;
-               }
-               this.popupList.setSelectedIndex(index);
+               wordPopup.moveSelection(this.keyCode);
                e.consume();
             } else {
                this.hideInputAssist();
@@ -613,7 +525,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshPopupLocation() {
       try {
          Rectangle anchor = this.editor.modelToView(this.wordStartedCaretPos);
-         this.popupBox.setLocation(anchor.x, anchor.y + anchor.height + 2);
+         this.wordPopup.setLocation(anchor.x, anchor.y + anchor.height + 2);
       } catch (BadLocationException e) {
          e.printStackTrace();
       }
@@ -660,7 +572,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          this.wordStartedCaretPos = this.editor.getCaretPosition();
       this.refreshPopupLocation();
       if (this.refreshWordList() > 0) {
-         this.popupBox.setVisible(true);
+         this.wordPopup.setVisible(true);
       }
       this.refreshWordBox();
       this.wordBox.setVisible(true);
@@ -685,24 +597,8 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @return 가져온 단어의 총 갯수를 반환한다.
     */
    int refreshWordList() {
-      Vector<String> matchings = this.wordManager.getMatchingWords(this.getWordToSearch());
-      Vector<String> deleteBtn = new Vector<>();
-      int numRows = matchings.size();
-      if (numRows <= 0) {
-         this.popupBox.setVisible(false);
-      } else {
-         FontMetrics listMetrics = this.popupList.getGraphics().getFontMetrics();
-         int maxWidth = 0;
-         for (int i = 0; i < numRows; i++) {
-            maxWidth = Math.max(maxWidth, listMetrics.stringWidth(matchings.get(i)));
-            deleteBtn.add("X");
-         }
-         this.popupList.setListData(matchings);
-         this.deleteList.setListData(deleteBtn);
-
-         maxWidth += listMetrics.stringWidth("X");
-         this.popupBox.setSize(maxWidth, listMetrics.getHeight());
-      }
-      return numRows;
+      this.wordPopup.setWordList(this.wordManager.getMatchingWords(getWordToSearch()));
+      this.wordPopup.repaint();
+      return this.wordPopup.getListSize();
    }
 }
