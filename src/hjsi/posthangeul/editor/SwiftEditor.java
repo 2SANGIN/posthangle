@@ -17,6 +17,8 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
+import hjsi.posthangeul.window.Helper;
+
 public class SwiftEditor extends JPanel {
    private static final long serialVersionUID = 8037738001573590413L;
    AutoComplete autocomplete;
@@ -26,7 +28,8 @@ public class SwiftEditor extends JPanel {
    JScrollPane scrollPane;
    SwitchLine switchLine;
    JTextPane textPane;
-   UndoManager undo = new UndoManager();
+   UndoManager undo;
+   Helper helper;
 
    {
       textPane = new JTextPane();
@@ -35,7 +38,9 @@ public class SwiftEditor extends JPanel {
       linenum = new TextLineNumber(textPane);
       gotoline = new GoToLine(textPane);
       remove = new RemoveLine(textPane);
+      undo = new UndoManager();
       switchLine = new SwitchLine(textPane);
+      helper = new Helper(textPane);
       linenum.setBackground(Color.WHITE);
       scrollPane.setRowHeaderView(linenum);
 
