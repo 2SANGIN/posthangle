@@ -1,10 +1,5 @@
 package hjsi.posthangeul.window;
 
-import hjsi.posthangeul.action.FileSaveAction;
-import hjsi.posthangeul.editor.HangeulAssembler;
-import hjsi.posthangeul.editor.SwiftEditor;
-import hjsi.posthangeul.editor.VisibleCaretListener;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -15,6 +10,11 @@ import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import hjsi.posthangeul.action.FileSaveAction;
+import hjsi.posthangeul.editor.HangeulAssembler;
+import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
 
 
 public class PostHangeulApp {
@@ -53,7 +53,6 @@ public class PostHangeulApp {
       topMenu.add(recorder);
 
       mainWindow.getContentPane().add(topMenu, BorderLayout.NORTH);
-      mainWindow.getContentPane().add(new FileTree(new File(".")), BorderLayout.WEST);
 
       /* add editor */
       editor = new SwiftEditor();

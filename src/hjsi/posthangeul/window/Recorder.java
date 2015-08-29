@@ -16,56 +16,55 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import recorder.SoundRecordingUtil;
+import hjsi.posthangeul.recorder.SoundRecordingUtil;
 
 // 녹음기 개발
 public class Recorder extends JPanel {
    JPanel recordMenu;
-   JButton open;
-   JButton start;
-   JButton stop;
+   JButton btnOpen;
+   JButton btnRecord;
+   JButton btnStop;
    JTextField msg;
    Thread rc;
 
    private int sec = 0;
    private int min = 0;
    private int mil = 0;
-   
-   private boolean isRecording = false;
 
    public Recorder(PostHangeulApp app, int btnSize) {
 
       setLayout(new FlowLayout(FlowLayout.LEFT));
 
       recordMenu = new JPanel();
-      open = new JButton("open");
-      start = new JButton("start");
-      stop = new JButton("stop");
+      btnOpen = new JButton("open");
+      btnRecord = new JButton("record");
+      btnStop = new JButton("stop");
       msg = new JTextField("Recording is ready");
-      
+
       recordMenu.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
-      start.setSize(btnSize, btnSize);
-      stop.setSize(btnSize, btnSize);
+      btnRecord.setSize(btnSize, btnSize);
+      btnStop.setSize(btnSize, btnSize);
+      btnStop.setEnabled(false);
       msg.setPreferredSize(new Dimension(200, btnSize));
       msg.setEditable(false);
       msg.setBackground(getBackground());
       msg.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
-      recordMenu.add(open);
-      recordMenu.add(start);
-      recordMenu.add(stop);
+      recordMenu.add(btnOpen);
+      recordMenu.add(btnRecord);
+      recordMenu.add(btnStop);
       recordMenu.add(msg);
 
       add(recordMenu);
-      
+
       final SoundRecordingUtil recorder = new SoundRecordingUtil();
 
-      start.addActionListener(new ActionListener() {
+      btnRecord.addActionListener(new ActionListener() {
 
          @Override
          public void actionPerformed(ActionEvent e) {
             // TODO Auto-generated method stub
-            isRecording = true;
+            btnStop.setEnabled(true);
             Thread recordThread = new Thread(new Runnable() {
                @Override
                public void run() {
@@ -92,17 +91,16 @@ public class Recorder extends JPanel {
          }
       });
 
-      stop.addActionListener(new ActionListener() {
+      btnStop.addActionListener(new ActionListener() {
          @Override
          public void actionPerformed(ActionEvent e) {
-            if(isRecording) {
-               
+
             // TODO Auto-generated method stub
             try {
                File wavFile = new File("records/" + getName() + ".wav");
                recorder.stop();
                rc.stop();
-               
+
                recorder.save(wavFile);
                msg.setText("File saved successfully!");
                msg.setForeground(Color.BLACK);
@@ -111,9 +109,9 @@ public class Recorder extends JPanel {
                e1.printStackTrace();
             }
             System.out.println("STOPPED");
-            isRecording = false;
+            btnStop.setEnabled(true);
          }
-      }});
+      });
 
       System.out.println("DONE");
    }
@@ -154,7 +152,7 @@ public class Recorder extends JPanel {
       msg.setForeground(Color.RED);
 
    }
-   
+
    private void init() {
       sec = 0;
       min = 0;

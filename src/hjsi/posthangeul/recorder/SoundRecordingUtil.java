@@ -1,4 +1,4 @@
-package recorder;
+package hjsi.posthangeul.recorder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
