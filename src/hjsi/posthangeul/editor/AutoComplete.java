@@ -287,8 +287,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                this.showInputAssist();
          }
       } else {
+         System.out.println("uncommitted is null! \n");
          this.initUncommittedBuffer();
-         System.out.println("it's null! \n");
+         if (this.commBuf.length() == 0) {
+            this.initWordBuffers();
+            this.hideInputAssist();
+         } else {
+            this.resizeWordBox();
+         }
       }
    }
 
@@ -333,7 +339,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_BACK_SPACE:
-               if (this.commBufPos <= 0 || this.modShiftAllowed) {
+               if (this.commBufPos <= 0 || this.modShift) {
                   this.hideInputAssist();
                   this.initWordBuffers();
                } else {
@@ -791,6 +797,15 @@ public class AutoComplete implements KeyListener, InputMethodListener {
       this.commBuf = new StringBuffer();
       this.commBufPos = 0;
       this.initUncommittedBuffer();
+   }
+
+   /**
+    * 버퍼 출력
+    */
+   void printWordBuffers() {
+      System.out.println("commBuf: \"" + this.commBuf + ", length: " + this.commBuf.length());
+      System.out.println("uncommBuf: \"" + this.uncommBuf + ", length: " + this.uncommBuf.length());
+      System.out.println("commBufPos: " + this.commBufPos);
    }
 
    /**
