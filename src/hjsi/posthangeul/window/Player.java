@@ -95,6 +95,15 @@ public class Player extends JPanel implements ActionListener {
       sliderTime.setEnabled(false);
       sliderTime.setValue(0);
 
+      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+      panelButtons.add(buttonOpen);
+      panelButtons.add(buttonPlay);
+      panelButtons.add(buttonPause);
+
+      constraints.gridwidth = 3;
+      constraints.gridx = 3;
+      add(panelButtons, constraints);
+
       constraints.gridx = 0;
       constraints.gridy = 0;
       constraints.gridwidth = 3;
@@ -111,14 +120,6 @@ public class Player extends JPanel implements ActionListener {
       constraints.gridx = 2;
       add(labelDuration, constraints);
 
-      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
-      panelButtons.add(buttonOpen);
-      panelButtons.add(buttonPlay);
-      panelButtons.add(buttonPause);
-
-      constraints.gridwidth = 3;
-      constraints.gridx = 3;
-      add(panelButtons, constraints);
 
       buttonOpen.addActionListener(this);
       buttonPlay.addActionListener(this);

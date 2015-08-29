@@ -38,8 +38,25 @@ public class PlayingTimer extends Thread {
 
       startTime = System.currentTimeMillis();
 
+
       while (isRunning) {
-         try {
+         // slider.setUI(new TrackLis {
+         //
+         // protected void scrollDueToClickInTrack(int direction) {
+         // // this is the default behaviour, let's comment that out
+         // // scrollByBlock(direction);
+         //
+         // int value = slider.getValue();
+         //
+         // if (slider.getOrientation() == JSlider.HORIZONTAL) {
+         // value = this.valueForXPosition(slider.getMousePosition().x);
+         // }
+         // slider.setValue(value);
+         // }
+         // });
+         try
+
+         {
             Thread.sleep(100);
             if (!isPause) {
                if (audioClip != null && audioClip.isRunning()) {
@@ -50,7 +67,11 @@ public class PlayingTimer extends Thread {
             } else {
                pauseTime += 100;
             }
-         } catch (InterruptedException ex) {
+         } catch (
+
+         InterruptedException ex)
+
+         {
             ex.printStackTrace();
             if (isReset) {
                slider.setValue(0);
@@ -59,6 +80,7 @@ public class PlayingTimer extends Thread {
                break;
             }
          }
+
       }
    }
 

@@ -20,6 +20,7 @@ import hjsi.posthangeul.editor.VisibleCaretListener;
 
 public class PostHangeulApp {
    public static void main(String[] args) {
+
       new HangeulAssembler(); // 테스트 코드 출력용
       PostHangeulApp app = new PostHangeulApp();
 
