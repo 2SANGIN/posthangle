@@ -10,6 +10,7 @@ import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.editor.HangeulAssembler;
@@ -21,8 +22,8 @@ public class PostHangeulApp {
    public static void main(String[] args) {
       new HangeulAssembler(); // 테스트 코드 출력용
       PostHangeulApp app = new PostHangeulApp();
-      app.editor.requestFocus();
 
+      app.editor.requestFocus();
    }
 
    JPanel topMenu;
@@ -50,11 +51,19 @@ public class PostHangeulApp {
       /* create menu */
       shortcuts = new Shortcut(this, 24);
       recorder = new Recorder(this, 24);
-      player = new Player(this);
+
 
       topMenu.add(shortcuts);
       topMenu.add(recorder);
-      topMenu.add(player);
+
+      SwingUtilities.invokeLater(new Runnable() {
+         @Override
+         public void run() {
+            player = new Player(PostHangeulApp.this);
+            player.setVisible(true);
+            topMenu.add(player);
+         }
+      });
 
       mainWindow.getContentPane().add(topMenu, BorderLayout.NORTH);
 

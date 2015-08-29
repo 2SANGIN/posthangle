@@ -3,6 +3,8 @@ package hjsi.posthangeul.window;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -11,7 +13,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,10 +24,10 @@ import hjsi.posthangeul.recorder.SoundRecordingUtil;
 
 // 녹음기 개발
 public class Recorder extends JPanel {
-   JPanel recordMenu;
-   JButton btnRecord;
-   JLabel msg;
-   Thread rc;
+   private JPanel recordMenu;
+   private JButton btnRecord;
+   private JLabel msg;
+   private Thread rc;
 
    private boolean isRecording = false;
    private boolean isPlaying = false;
@@ -36,12 +40,29 @@ public class Recorder extends JPanel {
 
       setLayout(new FlowLayout(FlowLayout.LEFT));
 
+      Image image = null;
+      File fpPath = new File("resources");
+
+      /* set image to each buttons */
+      // new file
+
+
       recordMenu = new JPanel();
-      btnRecord = new JButton("record");
+      btnRecord = new JButton("Record");
+      btnRecord.setFont(new Font("Sans", Font.BOLD, 14));
       msg = new JLabel("Recording is ready");
 
       recordMenu.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
-      btnRecord.setSize(btnSize, btnSize);
+
+      try {
+         image = ImageIO.read(new File(fpPath, "Record.png")).getScaledInstance(btnSize, btnSize,
+               Image.SCALE_AREA_AVERAGING);
+         btnRecord.setIcon(new ImageIcon(image));
+      } catch (IOException e2) {
+         // TODO Auto-generated catch block
+         e2.printStackTrace();
+      }
+
       msg.setPreferredSize(new Dimension(200, btnSize));
       msg.setBackground(getBackground());
       msg.setBorder(javax.swing.BorderFactory.createEmptyBorder());

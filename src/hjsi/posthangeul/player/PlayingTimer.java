@@ -1,4 +1,5 @@
 package hjsi.posthangeul.player;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -10,9 +11,6 @@ import javax.swing.JSlider;
 
 /**
  * This class counts playing time in the form of HH:mm:ss It also updates the time slider
- * 
- * @author www.codejava.net
- *
  */
 public class PlayingTimer extends Thread {
    private DateFormat dateFormater = new SimpleDateFormat("HH:mm:ss");
@@ -30,7 +28,7 @@ public class PlayingTimer extends Thread {
       this.audioClip = audioClip;
    }
 
-   PlayingTimer(JLabel labelRecordTime, JSlider slider) {
+   public PlayingTimer(JLabel labelRecordTime, JSlider slider) {
       this.labelRecordTime = labelRecordTime;
       this.slider = slider;
    }
@@ -68,16 +66,16 @@ public class PlayingTimer extends Thread {
    /**
     * Reset counting to "00:00:00"
     */
-   void reset() {
+   public void reset() {
       isReset = true;
       isRunning = false;
    }
 
-   void pauseTimer() {
+   public void pauseTimer() {
       isPause = true;
    }
 
-   void resumeTimer() {
+   public void resumeTimer() {
       isPause = false;
    }
 

@@ -1,4 +1,5 @@
 package hjsi.posthangeul.player;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -14,8 +15,6 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
  * An utility class for playing back audio files using Java Sound API.
- * 
- * @author www.codejava.net
  *
  */
 public class AudioPlayer implements LineListener {
@@ -104,7 +103,7 @@ public class AudioPlayer implements LineListener {
     * @throws UnsupportedAudioFileException
     * @throws LineUnavailableException
     */
-   void play() throws IOException {
+   public void play() throws IOException {
 
       audioClip.start();
 
