@@ -36,14 +36,18 @@ public class Recorder extends JPanel {
 
    private SoundRecordingUtil recorder;
 
-   public Recorder(PostHangeulApp app, int btnSize) {
+   /**
+    * 녹음 제어 패널을 생성한다.
+    *
+    * @param btnSize
+    */
+   public Recorder(int btnSize) {
       this.setLayout(new FlowLayout(FlowLayout.LEFT));
 
       Image image = null;
       File fpPath = new File("resources");
 
       /* set image to each buttons */
-      // new file
       this.recordMenu = new JPanel();
       this.btnRecord = new JButton("Record");
       this.btnRecord.setFont(new Font("Sans", Font.BOLD, 14));
@@ -68,30 +72,32 @@ public class Recorder extends JPanel {
 
       this.add(this.recordMenu);
 
-      this.recorder = new SoundRecordingUtil();
+      this.recorder = new SoundRecordingUtil(this.msg);
 
+      /* 녹음 시작/정지 버튼의 리스너를 등록한다 */
       this.btnRecord.addActionListener(e -> {
+         /* 녹음 시작 */
          if (!Recorder.this.isRecording) {
             Recorder.this.isRecording = true;
             Recorder.this.btnRecord.setText("stop");
-            Thread recordThread = new Thread(() -> {
-               System.out.println("Start recording...");
-               this.recorder.startRecording();
-            });
-            recordThread.start();
+
+            System.out.println("Start recording...");
+            this.recorder.startRecording();
          }
 
+         /* 녹음 중지 */
          else if (Recorder.this.isRecording) {
             Recorder.this.isRecording = false;
             Recorder.this.btnRecord.setText("Record");
+
             try {
                byte[] soundBinaries = this.recorder.stopRecording();
-               this.recorder.save(Recorder.this.getFileName());
-               Recorder.this.msg.setText("File saved successfully!");
-               Recorder.this.msg.setForeground(Color.BLACK);
+               this.recorder.save(Recorder.this.getNowTime(), soundBinaries);
             } catch (IOException e1) {
                e1.printStackTrace();
             }
+            Recorder.this.msg.setText("File saved successfully!");
+            Recorder.this.msg.setForeground(Color.BLACK);
             System.out.println("STOPPED");
 
          }
@@ -100,14 +106,9 @@ public class Recorder extends JPanel {
       System.out.println("DONE");
    }
 
-   public String getFileName() {
+   public String getNowTime() {
       DateFormat dateFormat = new SimpleDateFormat("yy-MM-dd-HHmmss");
       Date date = new Date();
       return dateFormat.format(date);
-   }
-
-   private void update(long framePosition) {
-      // this.msg.setText("Recording... " + min + ":" + sec + ":" + mil);
-      this.msg.setForeground(Color.RED);
    }
 }

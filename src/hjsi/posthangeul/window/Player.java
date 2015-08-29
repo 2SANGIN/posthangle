@@ -28,15 +28,25 @@ import hjsi.posthangeul.player.AudioPlayer;
 import hjsi.posthangeul.player.PlayingTimer;
 
 
+/**
+ * Player <br>
+ * 2015. 8. 30.
+ *
+ * @author HYUNJIN
+ */
 public class Player extends JPanel implements ActionListener {
+   @SuppressWarnings("javadoc")
+   private static final long serialVersionUID = 8049094210188913162L;
+
    private AudioPlayer player = new AudioPlayer();
    private Thread playbackThread;
+
    private PlayingTimer timer;
-
    private boolean isPlaying = false;
-   private boolean isPause = false;
 
+   private boolean isPause = false;
    private String audioFilePath;
+
    private String lastOpenPath;
 
    private JLabel labelFileName = new JLabel("Playing File:");
@@ -75,13 +85,10 @@ public class Player extends JPanel implements ActionListener {
                Image.SCALE_AREA_AVERAGING);
          this.buttonPause.setIcon(new ImageIcon(this.image));
       } catch (IOException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
 
-
       this.buttonOpen.setFont(new Font("Sans", Font.BOLD, 14));
-
       this.buttonPlay.setFont(new Font("Sans", Font.BOLD, 14));
       this.buttonPlay.setEnabled(false);
 
@@ -128,7 +135,6 @@ public class Player extends JPanel implements ActionListener {
 
    @Override
    public void actionPerformed(ActionEvent e) {
-      // TODO Auto-generated method stub
       Object source = e.getSource();
 
       if (source instanceof JButton) {
@@ -149,7 +155,6 @@ public class Player extends JPanel implements ActionListener {
             }
          }
       }
-
    }
 
    private void openFile() {

@@ -19,6 +19,7 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
+import hjsi.posthangeul.editor.autocomplete.AutoComplete;
 import hjsi.posthangeul.window.Helper;
 
 public class SwiftEditor extends JPanel {

@@ -1,4 +1,4 @@
-package hjsi.posthangeul.editor;
+package hjsi.posthangeul.editor.autocomplete;
 
 import java.awt.Color;
 import java.awt.Font;

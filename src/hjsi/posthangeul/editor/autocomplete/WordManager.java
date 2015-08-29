@@ -1,4 +1,4 @@
-package hjsi.posthangeul.editor;
+package hjsi.posthangeul.editor.autocomplete;
 
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import hjsi.posthangeul.Database.DBManager;
+import hjsi.posthangeul.editor.PostIME;
 import hjsi.posthangeul.window.PostHangeulApp;
 
 public class WordManager {

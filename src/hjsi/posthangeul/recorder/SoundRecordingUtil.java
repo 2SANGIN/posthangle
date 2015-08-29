@@ -12,6 +12,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
+import javax.swing.JLabel;
 
 /**
  * A utility class provides general functions for recording sound.
@@ -20,6 +21,11 @@ import javax.sound.sampled.TargetDataLine;
  *
  */
 public class SoundRecordingUtil implements Runnable {
+   /**
+    * 시간 표시에 사용할 포맷
+    */
+   private static final String timeFormat = "%02d:%02d:%02d";
+
    private static final int BUFFER_SIZE = 4096;
 
    /**
@@ -58,13 +64,18 @@ public class SoundRecordingUtil implements Runnable {
 
    private TargetDataLine audioLine;
 
-   private byte[] audioDatas;
-
+   /**
+    * 시간을 표시할 외부 위젯
+    */
+   private JLabel timeIndicator;
 
    /**
     * 녹음 유틸리티를 생성한다.
+    *
+    * @param indicator 시간을 표시하기 위한 외부 라벨 객체
     */
-   public SoundRecordingUtil() {
+   public SoundRecordingUtil(JLabel indicator) {
+      this.timeIndicator = indicator;
       this.format = SoundRecordingUtil.getAudioFormat();
       DataLine.Info info = new DataLine.Info(TargetDataLine.class, this.format);
 
@@ -99,11 +110,7 @@ public class SoundRecordingUtil implements Runnable {
          while (this.isRunning) {
             bytesRead = this.audioLine.read(buffer, 0, buffer.length);
             this.recordBytes.write(buffer, 0, bytesRead);
-            // TODO 시간초 갱신
-            long milliSec = this.audioLine.getLongFramePosition();
-            int sec = (int) (milliSec / 10000L);
-            milliSec %= 10000L;
-            System.out.println(sec + "." + milliSec + " sec...");
+            this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
          }
 
          this.audioLine.stop();
@@ -119,10 +126,11 @@ public class SoundRecordingUtil implements Runnable {
     * Save recorded sound data into a .wav file format.
     *
     * @param wavFileName The file name to be saved. The name is exclusive extension.
+    * @param binaries The sound binaries to be saved.
     * @throws IOException if any I/O error occurs.
     */
-   public void save(String wavFileName) throws IOException {
-      if (this.audioDatas != null) {
+   public void save(String wavFileName, byte[] binaries) throws IOException {
+      if (binaries != null) {
          File path = new File("records");
 
          if (!path.exists()) {
@@ -134,13 +142,14 @@ public class SoundRecordingUtil implements Runnable {
             }
          }
          File wavFile = new File(path, wavFileName + ".wav");
-         ByteArrayInputStream bais = new ByteArrayInputStream(this.audioDatas);
+         ByteArrayInputStream bais = new ByteArrayInputStream(binaries);
 
          AudioInputStream audioInputStream = null;
          try {
             audioInputStream = new AudioInputStream(bais, this.format,
-                  this.audioDatas.length / this.format.getFrameSize());
+                  binaries.length / this.format.getFrameSize());
             AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, wavFile);
+            System.out.println(wavFile.toString() + " is saved!");
          } catch (IOException e) {
             e.printStackTrace();
          } finally {
@@ -183,5 +192,21 @@ public class SoundRecordingUtil implements Runnable {
          this.recordBytes.close();
       }
       return soundBinaries;
+   }
+
+   /**
+    * 주어진 시간으로 시간 표시창에 표시한다.
+    *
+    * @param microSec 갱신할 시간, 마이크로초 기준
+    */
+   public void updateTimeIndicator(long microSec) {
+      int milliSec = (int) (microSec / 1000L);
+      int sec = milliSec / 1000;
+      int min = sec / 60;
+      int hour = min / 60;
+      min %= 60;
+      sec %= 60;
+      milliSec /= 100;
+      this.timeIndicator.setText(String.format(timeFormat, hour, min, sec));
    }
 }

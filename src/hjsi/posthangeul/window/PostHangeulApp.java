@@ -62,12 +62,11 @@ public class PostHangeulApp {
 
       /* create menu */
       this.shortcuts = new Shortcut(this, 24);
-      this.recorder = new Recorder(this, 24);
+      this.recorder = new Recorder(24);
       this.topMenu.add(this.shortcuts);
       this.topMenu.add(this.recorder);
       SwingUtilities.invokeLater(() -> {
-         PostHangeulApp.this.player = new Player(PostHangeulApp.this);
-         PostHangeulApp.this.player.setVisible(true);
+         PostHangeulApp.this.player = new Player(PostHangeulApp.this); // create player
          PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
       });
       this.mainWindow.getContentPane().add(this.topMenu, BorderLayout.NORTH);
