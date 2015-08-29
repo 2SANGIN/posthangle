@@ -294,9 +294,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                   this.hideInputAssist();
                } else {
                   if (this.isShowingInputAssist()) {
-                     String wordToReplace = this.wordPopup.getSelectedWord();
+                     String wordToReplace = this.wordPopup.getSelectedItem();
                      if (wordToReplace == null)
-                        wordToReplace = this.wordPopup.getWord(0);
+                        wordToReplace = this.wordPopup.getItemAt(0);
 
                      if (wordToReplace != null) {
                         if (this.getWordToSearch().compareTo(wordToReplace) != 0) {
@@ -328,7 +328,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
             case KeyEvent.VK_TAB:
                if (this.isShowingInputAssist()) {
-                  String wordToReplace = this.wordPopup.getSelectedWord();
+                  String wordToReplace = this.wordPopup.getSelectedItem();
                   if (wordToReplace != null) {
                      if (this.getWordToSearch().compareTo(wordToReplace) != 0) {
                         /* replace */
@@ -559,8 +559,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void refreshInputAssist() {
       this.refreshWordBox();
-      this.refreshWordList();
-      this.wordPopup.redraw();
+      this.wordPopup.setWordList(this.wordManager.getMatchingWords(this.getWordToSearch()));
    }
 
    /**
@@ -659,6 +658,6 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    int refreshWordList() {
       this.wordPopup.setWordList(this.wordManager.getMatchingWords(this.getWordToSearch()));
-      return this.wordPopup.getRowCount();
+      return this.wordPopup.getItemCount();
    }
 }

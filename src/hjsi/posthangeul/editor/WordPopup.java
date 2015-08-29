@@ -106,15 +106,6 @@ public class WordPopup extends JScrollPane {
    private int maxRowCount = 15;
 
    /**
-    * 팝업이 보여줄 최소 가로 길이 (삭제 버튼 포함)
-    */
-   private int minWidth = 100;
-   /**
-    * 팝업이 보여줄 최대 가로 길이 (삭제 버튼 포함)
-    */
-   private int maxWidth = 360;
-
-   /**
     * 팝업 자체의 패딩
     */
    private Insets padding;
@@ -135,33 +126,35 @@ public class WordPopup extends JScrollPane {
       this.padding = this.getInsets();
       this.setSize(300 + this.padding.left + this.padding.right, 220);
       this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-      this.getVerticalScrollBar().addAdjustmentListener(e -> WordPopup.this.redraw());
+      this.getVerticalScrollBar().addAdjustmentListener(e -> WordPopup.this.wrapper.repaint());
 
       /* 내용물 설정 */
       this.items = new ArrayList<>();
    }
 
    /**
-    * 호버 상태를 해제한다.
-    */
-   public void clearHover() {
-      this.hoverIndex = -1;
-      this.redraw();
-   }
-
-   /**
     * 선택 상태를 해제한다.
     */
    public void clearSelection() {
+      if (this.selectedIndex > -1) {
+         if (this.selectedIndex == this.hoverIndex)
+            this.hoverItem(this.hoverIndex);
+         else
+            this.deselectItem(this.selectedIndex);
+      }
       this.selectedIndex = -1;
-      this.redraw();
    }
 
    /**
-    * @return the hoverIndex
+    * 인덱스에 해당하는 단어를 가져온다.
+    *
+    * @param index 가져올 단어의 인덱스
+    * @return 인덱스에 해당하는 단어가 있으면 String 객체, 없으면 null
     */
-   public int getHoverIndex() {
-      return this.hoverIndex;
+   public String getItemAt(int index) {
+      if (index >= 0 && index < this.getItemCount())
+         return this.getLabel(index).getText();
+      return null;
    }
 
    /**
@@ -169,19 +162,8 @@ public class WordPopup extends JScrollPane {
     *
     * @return 단어의 갯수 >= 0
     */
-   public int getRowCount() {
+   public int getItemCount() {
       return this.items.size();
-   }
-
-   /**
-    * 단어 목록의 한 개의 행 높이를 반환한다.
-    *
-    * @return 단어 목록의 한 행의 높이, 목록이 없으면 0
-    */
-   public int getRowHeight() {
-      if (this.getRowCount() > 0)
-         return this.items.get(0).getHeight();
-      return 0;
    }
 
    /**
@@ -198,20 +180,8 @@ public class WordPopup extends JScrollPane {
     *
     * @return 선택된 단어가 있으면 String 객체, 아니라면 null
     */
-   public String getSelectedWord() {
-      return this.getWord(this.getSelectedIndex());
-   }
-
-   /**
-    * 인덱스에 해당하는 단어를 가져온다.
-    *
-    * @param index 가져올 단어의 인덱스
-    * @return 인덱스에 해당하는 단어가 있으면 String 객체, 없으면 null
-    */
-   public String getWord(int index) {
-      if (index >= 0 && index < this.getRowCount())
-         return this.getLabel(index).getText();
-      return null;
+   public String getSelectedItem() {
+      return this.getItemAt(this.getSelectedIndex());
    }
 
    /**
@@ -244,9 +214,9 @@ public class WordPopup extends JScrollPane {
       int index = 0;
       if (!this.isSelectionEmpty()) {
          if (keyCode == KeyEvent.VK_UP)
-            index = (this.getSelectedIndex() + this.getRowCount() - 1) % this.getRowCount();
+            index = (this.getSelectedIndex() + this.getItemCount() - 1) % this.getItemCount();
          else if (keyCode == KeyEvent.VK_DOWN)
-            index = (this.getSelectedIndex() + 1) % this.getRowCount();
+            index = (this.getSelectedIndex() + 1) % this.getItemCount();
          else
             throw new InvalidParameterException("올바른 매개변수가 아닙니다.");
       }
@@ -271,47 +241,11 @@ public class WordPopup extends JScrollPane {
    public void pack() {
       /* 세로 길이 계산 */
       int h = this.getRowHeight()
-            * Math.max(this.minRowCount, Math.min(this.maxRowCount, this.getRowCount()));
+            * Math.max(this.minRowCount, Math.min(this.maxRowCount, this.getItemCount()));
 
       /* 내용물 바깥의 요소 크기 계산 */
       h += this.padding.left + this.padding.right;
       this.setSize(this.getWidth(), h);
-   }
-
-   /**
-    * 컴포넌트를 갱신한다.
-    */
-   public void redraw() {
-      for (int i = 0; i < this.getRowCount(); i++) {
-         this.items.get(i).setBackground(this.normalBgColor);
-         this.getLabel(i).setForeground(this.normalFgColor);
-      }
-
-      if (this.getHoverIndex() >= 0 && this.getHoverIndex() < this.getRowCount()) {
-         this.items.get(this.getHoverIndex()).setBackground(this.hoverBgColor);
-         this.getLabel(this.getHoverIndex()).setForeground(this.hoverFgColor);
-      }
-
-      if (this.selectedIndex >= 0 && this.selectedIndex < this.getRowCount()) {
-         this.items.get(this.getSelectedIndex()).setBackground(this.selectedBgColor);
-         this.getLabel(this.getSelectedIndex()).setForeground(this.selectedFgColor);
-      }
-      this.wrapper.repaint();
-   }
-
-   /**
-    * 마우스가 올라와있는 인덱스를 설정한다.
-    *
-    * @param index the hoverIndex to set
-    * @throws IndexOutOfBoundsException index가 0 미만, 혹은 단어 목록의 size 이상
-    */
-   public void setHoverIndex(int index) throws IndexOutOfBoundsException {
-      if (index >= 0 && index < this.getRowCount())
-         this.hoverIndex = index;
-      else
-         throw new IndexOutOfBoundsException("주어진 매개변수가 리스트의 범위를 벗어남.");
-
-      this.redraw();
    }
 
    /**
@@ -321,9 +255,13 @@ public class WordPopup extends JScrollPane {
     * @throws IndexOutOfBoundsException index가 0 미만, 혹은 단어 목록의 size 이상
     */
    public void setSelectedIndex(int index) throws IndexOutOfBoundsException {
-      if (index >= 0 && index < this.getRowCount()) {
+      if (index >= 0 && index < this.getItemCount()) {
+         if (this.selectedIndex == this.hoverIndex)
+            this.hoverItem(this.hoverIndex);
+         else
+            this.deselectItem(this.selectedIndex);
          this.selectedIndex = index;
-         this.redraw();
+         this.selectItem(this.selectedIndex);
       } else
          throw new IndexOutOfBoundsException("주어진 매개변수가 리스트의 범위를 벗어남.");
    }
@@ -332,7 +270,6 @@ public class WordPopup extends JScrollPane {
    public void setVisible(boolean aFlag) {
       this.clearSelection();
       this.clearHover();
-      this.redraw();
       super.setVisible(aFlag);
    }
 
@@ -342,6 +279,8 @@ public class WordPopup extends JScrollPane {
     * @param words 팝업 목록에 넣을 단어 벡터리스트
     */
    public void setWordList(Vector<String> words) {
+      this.clearHover();
+      this.clearSelection();
       this.items.clear();
       for (String word : words) {
          this.items.add(this.createWordItem(word));
@@ -397,7 +336,7 @@ public class WordPopup extends JScrollPane {
          public void mouseClicked(MouseEvent e) {
             int y = ((JPanel) e.getSource()).getY();
             WordPopup.this.setSelectedIndex((y / WordPopup.this.getRowHeight()));
-            System.out.println(WordPopup.this.getSelectedWord());
+            // System.out.println(WordPopup.this.getSelectedWord());
          }
 
          @Override
@@ -442,14 +381,94 @@ public class WordPopup extends JScrollPane {
    }
 
    /**
+    * 호버 상태를 해제한다.
+    */
+   protected void clearHover() {
+      if (this.hoverIndex > -1) {
+         if (this.hoverIndex == this.selectedIndex)
+            this.selectItem(this.selectedIndex);
+         else
+            this.deselectItem(this.hoverIndex);
+      }
+      this.hoverIndex = -1;
+   }
+
+   protected String deselectItem(int index) {
+      if (index >= 0 && index < this.getItemCount()) {
+         this.items.get(index).setBackground(this.normalBgColor);
+         this.getLabel(index).setForeground(this.normalFgColor);
+         this.wrapper.repaint();
+         return this.getItemAt(index);
+      }
+      return null;
+   }
+
+   /**
+    * @return the hoverIndex
+    */
+   protected int getHoverIndex() {
+      return this.hoverIndex;
+   }
+
+   /**
     * 인덱스에 해당하는 단어 JLabel 객체를 가져온다.
     *
     * @param index 가져올 라벨의 인덱스
     * @return 인덱스에 해당하는 라벨이 있으면 JLabel 객체, 없으면 null;
     */
-   private JLabel getLabel(int index) {
-      if (index >= 0 && index < this.getRowCount())
+   protected JLabel getLabel(int index) {
+      if (index >= 0 && index < this.getItemCount())
          return (JLabel) this.items.get(index).getComponent(0);
       return null;
+   }
+
+   /**
+    * 단어 목록의 한 개의 행 높이를 반환한다.
+    *
+    * @return 단어 목록의 한 행의 높이, 목록이 없으면 0
+    */
+   protected int getRowHeight() {
+      if (this.getItemCount() > 0)
+         return this.items.get(0).getHeight();
+      return 0;
+   }
+
+   protected String hoverItem(int index) {
+      if (index >= 0 && index < this.getItemCount()) {
+         this.items.get(index).setBackground(this.hoverBgColor);
+         this.getLabel(index).setForeground(this.hoverFgColor);
+         this.wrapper.repaint();
+         return this.getItemAt(index);
+      }
+      return null;
+   }
+
+   protected String selectItem(int index) {
+      if (index >= 0 && index < this.getItemCount()) {
+         this.items.get(index).setBackground(this.selectedBgColor);
+         this.getLabel(index).setForeground(this.selectedFgColor);
+         this.wrapper.repaint();
+         return this.getItemAt(index);
+      }
+      return null;
+   }
+
+   /**
+    * 마우스가 올라와있는 인덱스를 설정한다.
+    *
+    * @param index the hoverIndex to set
+    * @throws IndexOutOfBoundsException index가 0 미만, 혹은 단어 목록의 size 이상
+    */
+   protected void setHoverIndex(int index) throws IndexOutOfBoundsException {
+      if (index >= 0 && index < this.getItemCount()) {
+         if (this.hoverIndex == this.selectedIndex)
+            this.deselectItem(this.hoverIndex);
+         if (index == this.selectedIndex)
+            this.selectItem(index);
+         else
+            this.hoverItem(index);
+         this.hoverIndex = index;
+      } else
+         throw new IndexOutOfBoundsException("주어진 매개변수가 리스트의 범위를 벗어남.");
    }
 }
