@@ -30,6 +30,7 @@ public class PostHangeulApp {
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
    Recorder recorder;
+   Player player;
 
    SwiftEditor editor;
    /* config of app instance */
@@ -49,8 +50,11 @@ public class PostHangeulApp {
       /* create menu */
       shortcuts = new Shortcut(this, 24);
       recorder = new Recorder(this, 24);
+      player = new Player(this);
+
       topMenu.add(shortcuts);
       topMenu.add(recorder);
+      topMenu.add(player);
 
       mainWindow.getContentPane().add(topMenu, BorderLayout.NORTH);
 
@@ -63,7 +67,7 @@ public class PostHangeulApp {
 
       /* create main window */
       mainWindow.setBounds(0, 0, 800, 480);
-      mainWindow.setMinimumSize(new Dimension(600, 480));
+      mainWindow.setMinimumSize(new Dimension(900, 480));
       mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       mainWindow.setLocationRelativeTo(null);
       mainWindow.setVisible(true);

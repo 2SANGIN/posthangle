@@ -13,19 +13,20 @@ import java.util.Date;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 import hjsi.posthangeul.recorder.SoundRecordingUtil;
 
 // 녹음기 개발
 public class Recorder extends JPanel {
    JPanel recordMenu;
-   JButton btnOpen;
    JButton btnRecord;
-   JButton btnStop;
-   JTextField msg;
+   JLabel msg;
    Thread rc;
+
+   private boolean isRecording = false;
+   private boolean isPlaying = false;
 
    private int sec = 0;
    private int min = 0;
@@ -36,23 +37,16 @@ public class Recorder extends JPanel {
       setLayout(new FlowLayout(FlowLayout.LEFT));
 
       recordMenu = new JPanel();
-      btnOpen = new JButton("open");
       btnRecord = new JButton("record");
-      btnStop = new JButton("stop");
-      msg = new JTextField("Recording is ready");
+      msg = new JLabel("Recording is ready");
 
       recordMenu.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
       btnRecord.setSize(btnSize, btnSize);
-      btnStop.setSize(btnSize, btnSize);
-      btnStop.setEnabled(false);
       msg.setPreferredSize(new Dimension(200, btnSize));
-      msg.setEditable(false);
       msg.setBackground(getBackground());
       msg.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
-      recordMenu.add(btnOpen);
       recordMenu.add(btnRecord);
-      recordMenu.add(btnStop);
       recordMenu.add(msg);
 
       add(recordMenu);
@@ -64,52 +58,54 @@ public class Recorder extends JPanel {
          @Override
          public void actionPerformed(ActionEvent e) {
             // TODO Auto-generated method stub
-            btnStop.setEnabled(true);
-            Thread recordThread = new Thread(new Runnable() {
-               @Override
-               public void run() {
-                  try {
-                     System.out.println("Start recording...");
-                     Thread timeStamp = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                           // TODO Auto-generated method stub
-                           init();
-                           count();
-                        }
-                     });
-                     rc = timeStamp;
-                     timeStamp.start();
-                     recorder.start();
-                  } catch (LineUnavailableException ex) {
-                     ex.printStackTrace();
-                     System.exit(-1);
+
+            if (!isRecording) {
+               isRecording = true;
+               btnRecord.setText("stop");
+               Thread recordThread = new Thread(new Runnable() {
+                  @Override
+                  public void run() {
+                     try {
+                        System.out.println("Start recording...");
+                        Thread timeStamp = new Thread(new Runnable() {
+                           @Override
+                           public void run() {
+                              // TODO Auto-generated method stub
+                              init();
+                              count();
+                           }
+                        });
+                        rc = timeStamp;
+                        timeStamp.start();
+                        recorder.start();
+                     } catch (LineUnavailableException ex) {
+                        ex.printStackTrace();
+                        System.exit(-1);
+                     }
                   }
-               }
-            });
-            recordThread.start();
-         }
-      });
-
-      btnStop.addActionListener(new ActionListener() {
-         @Override
-         public void actionPerformed(ActionEvent e) {
-
-            // TODO Auto-generated method stub
-            try {
-               File wavFile = new File("records/" + getName() + ".wav");
-               recorder.stop();
-               rc.stop();
-
-               recorder.save(wavFile);
-               msg.setText("File saved successfully!");
-               msg.setForeground(Color.BLACK);
-            } catch (IOException e1) {
-               // TODO Auto-generated catch block
-               e1.printStackTrace();
+               });
+               recordThread.start();
             }
-            System.out.println("STOPPED");
-            btnStop.setEnabled(true);
+
+            else if (isRecording) {
+               isRecording = false;
+               btnRecord.setText("Record");
+               // TODO Auto-generated method stub
+               try {
+                  File wavFile = new File("records/" + getName() + ".wav");
+                  recorder.stop();
+                  rc.stop();
+
+                  recorder.save(wavFile);
+                  msg.setText("File saved successfully!");
+                  msg.setForeground(Color.BLACK);
+               } catch (IOException e1) {
+                  // TODO Auto-generated catch block
+                  e1.printStackTrace();
+               }
+               System.out.println("STOPPED");
+
+            }
          }
       });
 
