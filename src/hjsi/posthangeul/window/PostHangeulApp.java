@@ -17,13 +17,24 @@ import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
+import hjsi.posthangeul.action.FileSaveAction;
+import hjsi.posthangeul.editor.HangeulAssembler;
+import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
+
 
 public class PostHangeulApp {
+   public static final String appPath;
+
+   static {
+      appPath = System.getProperty("user.dir");
+      System.out.println(appPath);
+   }
+
    public static void main(String[] args) {
 
       new HangeulAssembler(); // 테스트 코드 출력용
       PostHangeulApp app = new PostHangeulApp();
-
       app.editor.requestFocus();
    }
 
@@ -40,20 +51,19 @@ public class PostHangeulApp {
    String[] defaultFontFamilies = {"나눔바른고딕", "나눔고딕", "맑은 고딕", "새굴림", "굴림"};
    int[] predefinedFontSizes = {9, 12, 16, 22};
 
-   int defaultFontSize = predefinedFontSizes[1];
+   int defaultFontSize = this.predefinedFontSizes[1];
 
    public PostHangeulApp() {
-      mainWindow = new JFrame();
-      mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
+      this.mainWindow = new JFrame();
+      this.mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
+      this.mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-      topMenu = new JPanel();
-      topMenu.setLayout(new BoxLayout(topMenu, BoxLayout.Y_AXIS));
+      this.topMenu = new JPanel();
+      this.topMenu.setLayout(new BoxLayout(this.topMenu, BoxLayout.Y_AXIS));
 
       /* create menu */
-      shortcuts = new Shortcut(this, 24);
-      recorder = new Recorder(this, 24);
-
-
+      this.shortcuts = new Shortcut(this, 24);
+      this.recorder = new Recorder(this, 24);
       topMenu.add(shortcuts);
       topMenu.add(recorder);
 
@@ -66,33 +76,33 @@ public class PostHangeulApp {
          }
       });
 
-      mainWindow.getContentPane().add(topMenu, BorderLayout.NORTH);
 
       /* add editor */
-      editor = new SwiftEditor();
-      editor.setFont(shortcuts.getFontFamily(), defaultFontSize);
-      editor.addCaretListener(shortcuts);
-      editor.addCaretListener(new VisibleCaretListener()); // for word wrapping
-      mainWindow.getContentPane().add(editor, BorderLayout.CENTER);
+      this.editor = new SwiftEditor();
+      this.editor.setFont(this.shortcuts.getFontFamily(), this.defaultFontSize);
+      this.editor.addCaretListener(this.shortcuts);
+      this.editor.addCaretListener(new VisibleCaretListener()); // for word wrapping
+      this.mainWindow.getContentPane().add(this.editor, BorderLayout.CENTER);
 
       /* create main window */
-      mainWindow.setBounds(0, 0, 800, 480);
+      this.mainWindow.setBounds(0, 0, 800, 480);
       mainWindow.setMinimumSize(new Dimension(900, 480));
-      mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      mainWindow.setLocationRelativeTo(null);
-      mainWindow.setVisible(true);
+      this.mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      this.mainWindow.setLocationRelativeTo(null);
+      this.mainWindow.setVisible(true);
 
-      getWindow().addWindowListener(new WindowAdapter() {
+      this.getWindow().addWindowListener(new WindowAdapter() {
          @Override
          public void windowClosing(WindowEvent ev) {
-            if (getEditor().getTextPane().getDocument().getLength() > 0) {
+            if (PostHangeulApp.this.getEditor().getTextPane().getDocument().getLength() > 0) {
                FileSaveAction save = new FileSaveAction(PostHangeulApp.this, false);
-               save.askSave(new ActionEvent(getWindow(), ActionEvent.ACTION_PERFORMED, "Exit"));
+               save.askSave(new ActionEvent(PostHangeulApp.this.getWindow(),
+                     ActionEvent.ACTION_PERFORMED, "Exit"));
             }
          }
       });
 
-      keyCodeViewer = new KeyCodeViewer(mainWindow, "KeyCode Viewer", false);
+      this.keyCodeViewer = new KeyCodeViewer(this.mainWindow, "KeyCode Viewer", false);
    }
 
    /**
@@ -103,11 +113,11 @@ public class PostHangeulApp {
    }
 
    public SwiftEditor getEditor() {
-      return editor;
+      return this.editor;
    }
 
    public JFrame getWindow() {
-      return mainWindow;
+      return this.mainWindow;
    }
 
    /**
@@ -115,7 +125,7 @@ public class PostHangeulApp {
     */
    public void setCurrentFile(File currentDocument) {
       this.currentFile = currentDocument;
-      mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
+      this.mainWindow.setTitle("Post Hangeul - " + this.currentFile.getName());
    }
 
 }

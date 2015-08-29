@@ -1,9 +1,13 @@
 package hjsi.posthangeul.editor;
 
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+
+import hjsi.posthangeul.Database.DBManager;
+import hjsi.posthangeul.window.PostHangeulApp;
 
 public class WordManager {
    private Map<String, String> historyLast;
@@ -12,22 +16,41 @@ public class WordManager {
     * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
     */
    private final Comparator<String> wordComparator =
-         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
-               - this.getWordCounter().get(o1).intValue());
+         (key1, key2) -> (this.getWordCounter().get(key2).intValue()
+               - this.getWordCounter().get(key1).intValue());
 
+   /**
+    * 단어와 카운트를 가진 맵
+    */
    private Map<String, Integer> wordCounter;
 
-   {
-      this.setWordCounter(new TreeMap<String, Integer>());
-      this.historyTop10 = new TreeMap<String, Vector<String>>();
-      this.historyLast = new TreeMap<String, String>();
+   /**
+    * DB 관리 객체
+    */
+   private final DBManager dbManager;
 
-      // test용
-      this.countWord("안녕하세요");
-      this.countWord("안녕못해");
-      this.countWord("안녕이라고");
-      this.countWord("제발말하지마");
-      this.countWord("오빠차뽑았다");
+   {
+      this.dbManager = new DBManager(PostHangeulApp.appPath + "\\userdic.db");
+
+      try {
+         this.setWordCounter(this.dbManager.loadAllWords());
+      } catch (SQLException e) {
+         e.printStackTrace();
+      }
+      this.historyTop10 = new TreeMap<>();
+      this.historyLast = new TreeMap<>();
+
+      // TODO test용
+      // this.countWord("안녕하세요");
+      // this.countWord("안녕못해");
+      // this.countWord("안녕이라고");
+      // this.countWord("제발말하지마");
+      // this.countWord("오빠차뽑았다");
+      // this.countWord("HelloWord");
+      // this.countWord("frozen");
+      // this.countWord("ohmygod");
+      // this.countWord("leagueoflegends");
+      // this.countWord("heroesofstorm");
    }
 
    public void addWordAsHistory(String inputWord, String selectedWord) {
@@ -48,6 +71,7 @@ public class WordManager {
          historyList.remove(historyList.size() - 1);
    }
 
+   @SuppressWarnings("boxing")
    public void countWord(String inputWord) {
       if (inputWord.length() > 1) {
          // 완성된 글자가 아니면 wordCounter에 넣지 않음
@@ -56,10 +80,23 @@ public class WordManager {
                return;
 
          Integer count = this.getWordCounter().get(inputWord);
-         if (count != null)
+         if (count != null) {
             count++;
-         else
+            /* db 단어 카운트 갱신 */
+            try {
+               this.dbManager.updateCount(inputWord);
+            } catch (SQLException e) {
+               e.printStackTrace();
+            }
+         } else {
             count = 1;
+            /* db에 단어 삽입 */
+            try {
+               this.dbManager.insertWord(inputWord);
+            } catch (SQLException e) {
+               e.printStackTrace();
+            }
+         }
          this.getWordCounter().put(inputWord.toString(), count);
          System.out.println("Counted Word: \"" + inputWord.toString() + "\", count: " + count);
       }
@@ -70,11 +107,13 @@ public class WordManager {
     * @return
     */
    public Vector<String> getMatchingWords(String inputWord) {
-      Vector<String> matchingWords = new Vector<String>();
+      Vector<String> matchingWords = new Vector<>();
       for (String str : this.getWordCounter().keySet()) {
          if (str.length() < inputWord.length())
             continue;
 
+         else if (str.startsWith(inputWord) || (inputWord.length() == 0))
+            matchingWords.add(str);
 
          // 초성을 포함하는지
          // matching words에는 완성된 글자만 들어가있음
@@ -85,11 +124,11 @@ public class WordManager {
             for (int index = 0; index < inputWord.length(); index++) {
                char input = inputWord.charAt(index);
                System.out.println("input length" + inputWord.length());
-               
+
                // 초성만 입력
                if (this.isKoreanAlphabet(input)) {
                   // 1. 저장된 문자열의 초성과 다른 경우, 그 다음 글자는 볼 필요도 없음
-                  if (input != getInitial(str.charAt(index))) {
+                  if (input != this.getInitial(str.charAt(index))) {
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      System.out.println("case 1");
@@ -97,39 +136,40 @@ public class WordManager {
                   }
                   if (matchingWords.contains(str) == false)
                      matchingWords.add(str);
-               } 
-               
+               }
+
                // 초성+중성 혹은 초성+중성+종성
-               else if (isKorean(input)) {
+               else if (this.isKorean(input)) {
                   // 2. 초성끼리 비교해서 다르면 그 다음 글자는 볼 필요도 없음
-                  if (getInitial(input) != getInitial(str.charAt(index))) {
+                  if (this.getInitial(input) != this.getInitial(str.charAt(index))) {
                      System.out.println("case 2");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 3. 중성끼리 비교해서 다르면 그 다음 글자는 볼 필요도 없음
-                  else if (getMedial(input) != getMedial(str.charAt(index))) {
+                  else if (this.getMedial(input) != this.getMedial(str.charAt(index))) {
                      System.out.println("case 3");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 4. 둘다 종성이 있는데 다르면 그 다음 글자는 볼 필요도 없음
-                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) != 0 && getFinal(input) != getFinal(str.charAt(index))) {
+                  else if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) != 0
+                        && this.getFinal(input) != this.getFinal(str.charAt(index))) {
                      System.out.println("case 4");
                      if (matchingWords.contains(str))
                         matchingWords.remove(str);
                      break;
                   }
-                  
+
                   // 5. input은 종성이 있고 str은 종성이 없는 경우
-                  else if (hasFinal(input) != 0 && hasFinal(str.charAt(index)) == 0) {
+                  else if (this.hasFinal(input) != 0 && this.hasFinal(str.charAt(index)) == 0) {
                      // input의 종성이 str 다음 글자의 초성과 다른 경우
                      if (inputWord.length() < str.length()) {
-                        if (getFinal(input) != getInitial(str.charAt(index + 1))) {
+                        if (this.getFinal(input) != this.getInitial(str.charAt(index + 1))) {
                            System.out.println("case 5");
                            if (matchingWords.contains(str))
                               matchingWords.remove(str);
@@ -142,8 +182,6 @@ public class WordManager {
                }
             }
          }
-         else if (str.startsWith(inputWord) || (inputWord.length() == 0))
-            matchingWords.add(str);
       }
       matchingWords.sort(this.getWordComparator());
       return matchingWords;
@@ -165,11 +203,17 @@ public class WordManager {
 
    /**
     * 메모리에 저장된 단어를 카운트 수에 상관 없이 제거한다.
-    * 
+    *
     * @param targetWord 제거할 단어
     */
    public void removeWord(String targetWord) {
       this.wordCounter.remove(targetWord);
+      try {
+         // db에서 제거
+         this.dbManager.deleteWord(targetWord);
+      } catch (SQLException e) {
+         e.printStackTrace();
+      }
    }
 
    /**
