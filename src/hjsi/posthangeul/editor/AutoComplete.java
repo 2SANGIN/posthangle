@@ -299,7 +299,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
       if (this.modShiftAllowed && isPunctuationMark(this.keyChar)) {
          if (this.isShowingInputAssist()) {
-            this.wordManager.countWord(this.getWordInBox());
+            /* caret이 입력 단어의 끝에 있을 때만 카운트 */
+            if (this.commBufPos == this.getWordInBox().length())
+               this.wordManager.countWord(this.getWordInBox());
             this.initWordBuffers();
             this.hideInputAssist();
          }
@@ -331,18 +333,18 @@ public class AutoComplete implements KeyListener, InputMethodListener {
                break;
 
             case KeyEvent.VK_BACK_SPACE:
-               if (this.commBufPos <= 0) {
+               if (this.commBufPos <= 0 || this.modShiftAllowed) {
                   this.hideInputAssist();
                   this.initWordBuffers();
                } else {
-                  this.refreshInputAssist();
                   this.backspaceCommitted();
+                  this.refreshInputAssist();
                }
                break;
 
             case KeyEvent.VK_HOME:
             case KeyEvent.VK_PAGE_UP:
-               if (this.isShowingInputAssist()) {
+               if (!this.wordPopup.isSelectionEmpty()) {
                   this.wordPopup.setSelectedIndex(0);
                   this.wordPopup.gotoScroll();
                   e.consume();
@@ -354,7 +356,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
             case KeyEvent.VK_END:
             case KeyEvent.VK_PAGE_DOWN:
-               if (this.isShowingInputAssist()) {
+               if (!this.wordPopup.isSelectionEmpty()) {
                   this.wordPopup.setSelectedIndex(this.wordPopup.getItemCount() - 1);
                   this.wordPopup.gotoScroll();
                   e.consume();
@@ -507,8 +509,14 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     */
    private void backspaceCommitted() {
       if (this.commBufPos > 0) {
-         this.commBuf.delete(this.commBufPos - 1, this.commBufPos);
-         this.commBufPos--;
+         if (this.modCtrl) {
+            this.commBuf.delete(0, this.commBufPos);
+            this.commBufPos = 0;
+            System.out.println(this.commBuf + ", " + this.commBufPos);
+         } else {
+            this.commBuf.delete(this.commBufPos - 1, this.commBufPos);
+            this.commBufPos--;
+         }
       }
    }
 
@@ -539,8 +547,11 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @return 워드박스 안의 단어
     */
    private String getWordInBox() {
-      if (this.uncommBuf.length() > 0)
-         return this.commBuf.toString() + this.uncommBuf.toString();
+      if (this.uncommBuf.length() > 0) {
+         String caretLeft = this.commBuf.substring(0, this.commBufPos);
+         String caretRight = this.commBuf.substring(this.commBufPos, this.commBuf.length());
+         return caretLeft + this.uncommBuf.toString() + caretRight;
+      }
       return this.commBuf.toString();
    }
 
@@ -550,8 +561,10 @@ public class AutoComplete implements KeyListener, InputMethodListener {
     * @return 자동완성 검색에 사용 될 단어
     */
    private String getWordToSearch() {
-      if (this.uncommBuf.length() > 0)
-         return this.commBuf.toString() + this.uncommBuf.toString();
+      if (this.uncommBuf.length() > 0) {
+         String caretLeft = this.commBuf.substring(0, this.commBufPos);
+         return caretLeft + this.uncommBuf.toString();
+      }
       return this.commBuf.substring(0, this.commBufPos);
    }
 
@@ -623,7 +636,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
 
          case KeyEvent.VK_UP:
          case KeyEvent.VK_DOWN:
-            if (this.isShowingInputAssist()) {
+            if (this.wordPopup.isShowing()) {
                this.wordPopup.moveSelection(this.keyCode);
                e.consume();
             } else {
@@ -662,6 +675,7 @@ public class AutoComplete implements KeyListener, InputMethodListener {
    private void refreshInputAssist() {
       this.resizeWordBox();
       this.wordPopup.setWordList(this.wordManager.getMatchingWords(this.getWordToSearch()));
+      this.wordPopup.repaint();
    }
 
    /**

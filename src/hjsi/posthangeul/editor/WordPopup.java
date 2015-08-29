@@ -232,8 +232,11 @@ public class WordPopup extends JScrollPane {
          else
             throw new InvalidParameterException("올바른 매개변수가 아닙니다.");
       }
-      this.setSelectedIndex(index);
-      this.gotoScroll();
+      if (this.getItemCount() > 0) {
+         this.setSelectedIndex(index);
+         this.gotoScroll();
+      } else
+         this.clearSelection();
    }
 
    /**
