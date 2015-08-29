@@ -12,8 +12,8 @@ public class WordManager {
     * 저장된 단어를 빈도 내림차순으로 정렬할 수 있도록 비교 방법을 가진 객체
     */
    private final Comparator<String> wordComparator =
-         (o1, o2) -> (this.getWordCounter().get(o2).intValue()
-               - this.getWordCounter().get(o1).intValue());
+         (key1, key2) -> (this.getWordCounter().get(key2).intValue()
+               - this.getWordCounter().get(key1).intValue());
 
    private Map<String, Integer> wordCounter;
 
@@ -22,12 +22,17 @@ public class WordManager {
       this.historyTop10 = new TreeMap<String, Vector<String>>();
       this.historyLast = new TreeMap<String, String>();
 
-      // test용
+      // TODO test용
       this.countWord("안녕하세요");
       this.countWord("안녕못해");
       this.countWord("안녕이라고");
       this.countWord("제발말하지마");
       this.countWord("오빠차뽑았다");
+      this.countWord("HelloWord");
+      this.countWord("frozen");
+      this.countWord("ohmygod");
+      this.countWord("leagueoflegends");
+      this.countWord("heroesofstorm");
    }
 
    public void addWordAsHistory(String inputWord, String selectedWord) {
@@ -48,6 +53,7 @@ public class WordManager {
          historyList.remove(historyList.size() - 1);
    }
 
+   @SuppressWarnings("boxing")
    public void countWord(String inputWord) {
       if (inputWord.length() > 1) {
          // 완성된 글자가 아니면 wordCounter에 넣지 않음

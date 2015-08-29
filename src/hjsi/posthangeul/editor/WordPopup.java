@@ -8,6 +8,7 @@ import java.awt.Insets;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -49,12 +50,12 @@ public class WordPopup extends JScrollPane {
    /**
     * word 패널과 xbtn 패널을 묶어주는 wrapper 패널
     */
-   private JPanel wrapper;
+   private JPanel wrapper = new JPanel();
 
    /**
     * 아이템
     */
-   private ArrayList<JPanel> items;
+   private ArrayList<JPanel> items = new ArrayList<>();
 
    /**
     * 현재 선택된 항목의 인덱스
@@ -111,11 +112,20 @@ public class WordPopup extends JScrollPane {
    private Insets padding;
 
    /**
+    * 선택 이벤트 리스너
+    */
+   private MouseListener selectListener;
+
+   /**
+    * 삭제 이벤트 리스너
+    */
+   private MouseListener deleteListener;
+
+   /**
     * 단어 목록을 보여주는 팝업 객체를 생성한다.
     */
    public WordPopup() {
       /* wrapper 패널 설정 */
-      this.wrapper = new JPanel();
       this.wrapper.setLayout(new BoxLayout(this.wrapper, BoxLayout.Y_AXIS));
       this.wrapper.setBackground(Color.WHITE);
 
@@ -127,9 +137,6 @@ public class WordPopup extends JScrollPane {
       this.setSize(300 + this.padding.left + this.padding.right, 220);
       this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
       this.getVerticalScrollBar().addAdjustmentListener(e -> WordPopup.this.wrapper.repaint());
-
-      /* 내용물 설정 */
-      this.items = new ArrayList<>();
    }
 
    /**
@@ -185,14 +192,19 @@ public class WordPopup extends JScrollPane {
    }
 
    /**
-    * 만들어야한다
-    *
-    * @param e
-    * @return
+    * 현재 선택된 아이템이 화면에 보이도록 스크롤바 위치 갱신
     */
-   public int getXButtonIndex(MouseEvent e) {
-      // TODO 만들어야 함!
-      return this.getSelectedIndex();
+   public void gotoScroll() {
+      JPanel selected = this.items.get(this.getSelectedIndex());
+      int yTop = selected.getY();
+      int yBottom = selected.getY() + selected.getHeight();
+      int posTop = this.getVerticalScrollBar().getValue();
+      int posBottom = posTop + this.getViewport().getHeight();
+
+      if (yTop < posTop)
+         this.getVerticalScrollBar().setValue(yTop);
+      else if (yBottom > posBottom)
+         this.getVerticalScrollBar().setValue(posTop - (posBottom - yBottom));
    }
 
    /**
@@ -221,18 +233,7 @@ public class WordPopup extends JScrollPane {
             throw new InvalidParameterException("올바른 매개변수가 아닙니다.");
       }
       this.setSelectedIndex(index);
-
-      JPanel selected = this.items.get(this.getSelectedIndex());
-      /* 현재 선택된 아이템으로 스크롤바 위치 갱신 */
-      int yTop = selected.getY();
-      int yBottom = selected.getY() + selected.getHeight();
-      int posTop = this.getVerticalScrollBar().getValue();
-      int posBottom = posTop + this.getViewport().getHeight();
-
-      if (yTop < posTop)
-         this.getVerticalScrollBar().setValue(yTop);
-      else if (yBottom > posBottom)
-         this.getVerticalScrollBar().setValue(posTop - (posBottom - yBottom));
+      this.gotoScroll();
    }
 
    /**
@@ -246,6 +247,28 @@ public class WordPopup extends JScrollPane {
       /* 내용물 바깥의 요소 크기 계산 */
       h += this.padding.left + this.padding.right;
       this.setSize(this.getWidth(), h);
+   }
+
+   /**
+    * 선택 된 아이템을 제거함
+    */
+   public void removeSelectedItem() {
+      if (this.selectedIndex > -1) {
+         this.wrapper.remove(this.selectedIndex);
+         this.items.remove(this.selectedIndex);
+         this.setVisible(false);
+         if (this.getItemCount() > 0)
+            this.setVisible(true);
+      }
+   }
+
+   /**
+    * 단어 삭제를 처리할 리스너를 등록한다.
+    *
+    * @param listener 클릭 이벤트를 구현한 리스너 혹은 어댑터 객체
+    */
+   public void setDeleteListener(MouseListener listener) {
+      this.deleteListener = listener;
    }
 
    /**
@@ -266,6 +289,15 @@ public class WordPopup extends JScrollPane {
          throw new IndexOutOfBoundsException("주어진 매개변수가 리스트의 범위를 벗어남.");
    }
 
+   /**
+    * 단어 선택을 처리할 리스너를 등록한다.
+    *
+    * @param listener 클릭 이벤트를 구현한 리스너 혹은 어댑터 객체
+    */
+   public void setSelectListener(MouseListener listener) {
+      this.selectListener = listener;
+   }
+
    @Override
    public void setVisible(boolean aFlag) {
       this.clearSelection();
@@ -279,8 +311,8 @@ public class WordPopup extends JScrollPane {
     * @param words 팝업 목록에 넣을 단어 벡터리스트
     */
    public void setWordList(Vector<String> words) {
-      this.clearHover();
       this.clearSelection();
+      this.clearHover();
       this.items.clear();
       for (String word : words) {
          this.items.add(this.createWordItem(word));
@@ -350,6 +382,8 @@ public class WordPopup extends JScrollPane {
             WordPopup.this.clearHover();
          }
       });
+      if (this.selectListener != null)
+         item.addMouseListener(this.selectListener);
       return item;
    }
 
@@ -365,6 +399,12 @@ public class WordPopup extends JScrollPane {
       xbtn.setForeground(Color.LIGHT_GRAY);
       xbtn.addMouseListener(new MouseAdapter() {
          @Override
+         public void mouseClicked(MouseEvent e) {
+            int y = ((JLabel) e.getSource()).getParent().getY();
+            WordPopup.this.setSelectedIndex((y / WordPopup.this.getRowHeight()));
+         }
+
+         @Override
          public void mouseEntered(MouseEvent e) {
             int y = ((JLabel) e.getSource()).getParent().getY();
             WordPopup.this.setHoverIndex((y / WordPopup.this.getRowHeight()));
@@ -377,6 +417,8 @@ public class WordPopup extends JScrollPane {
             xbtn.setForeground(Color.LIGHT_GRAY);
          }
       });
+      if (this.deleteListener != null)
+         xbtn.addMouseListener(this.deleteListener);
       return xbtn;
    }
 
@@ -393,6 +435,12 @@ public class WordPopup extends JScrollPane {
       this.hoverIndex = -1;
    }
 
+   /**
+    * 주어진 인덱스의 아이템의 색상을 선택 해제 된 일반 색상으로 한다.
+    *
+    * @param index 선택해제할 인덱스 >= 0, 인덱스 < itemCount
+    * @return 선택 해제 된 아이템 혹은 null
+    */
    protected String deselectItem(int index) {
       if (index >= 0 && index < this.getItemCount()) {
          this.items.get(index).setBackground(this.normalBgColor);
@@ -433,6 +481,12 @@ public class WordPopup extends JScrollPane {
       return 0;
    }
 
+   /**
+    * 주어진 인덱스의 아이템의 색상을 hover 색상으로 한다.
+    *
+    * @param index 선택해제할 인덱스 >= 0, 인덱스 < itemCount
+    * @return 마우스오버 된 아이템 혹은 null
+    */
    protected String hoverItem(int index) {
       if (index >= 0 && index < this.getItemCount()) {
          this.items.get(index).setBackground(this.hoverBgColor);
@@ -443,6 +497,12 @@ public class WordPopup extends JScrollPane {
       return null;
    }
 
+   /**
+    * 주어진 인덱스의 아이템의 색상을 선택 된 일반 색상으로 한다.
+    *
+    * @param index 선택해제할 인덱스 >= 0, 인덱스 < itemCount
+    * @return 선택 된 아이템 혹은 null
+    */
    protected String selectItem(int index) {
       if (index >= 0 && index < this.getItemCount()) {
          this.items.get(index).setBackground(this.selectedBgColor);
