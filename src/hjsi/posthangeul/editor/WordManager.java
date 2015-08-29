@@ -1,9 +1,13 @@
 package hjsi.posthangeul.editor;
 
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+
+import hjsi.posthangeul.Database.DBManager;
+import hjsi.posthangeul.window.PostHangeulApp;
 
 public class WordManager {
    private Map<String, String> historyLast;
@@ -15,24 +19,38 @@ public class WordManager {
          (key1, key2) -> (this.getWordCounter().get(key2).intValue()
                - this.getWordCounter().get(key1).intValue());
 
+   /**
+    * 단어와 카운트를 가진 맵
+    */
    private Map<String, Integer> wordCounter;
 
+   /**
+    * DB 관리 객체
+    */
+   private final DBManager dbManager;
+
    {
-      this.setWordCounter(new TreeMap<String, Integer>());
-      this.historyTop10 = new TreeMap<String, Vector<String>>();
-      this.historyLast = new TreeMap<String, String>();
+      this.dbManager = new DBManager(PostHangeulApp.appPath + "\\userdic.db");
+
+      try {
+         this.setWordCounter(this.dbManager.loadAllWords());
+      } catch (SQLException e) {
+         e.printStackTrace();
+      }
+      this.historyTop10 = new TreeMap<>();
+      this.historyLast = new TreeMap<>();
 
       // TODO test용
-      this.countWord("안녕하세요");
-      this.countWord("안녕못해");
-      this.countWord("안녕이라고");
-      this.countWord("제발말하지마");
-      this.countWord("오빠차뽑았다");
-      this.countWord("HelloWord");
-      this.countWord("frozen");
-      this.countWord("ohmygod");
-      this.countWord("leagueoflegends");
-      this.countWord("heroesofstorm");
+      // this.countWord("안녕하세요");
+      // this.countWord("안녕못해");
+      // this.countWord("안녕이라고");
+      // this.countWord("제발말하지마");
+      // this.countWord("오빠차뽑았다");
+      // this.countWord("HelloWord");
+      // this.countWord("frozen");
+      // this.countWord("ohmygod");
+      // this.countWord("leagueoflegends");
+      // this.countWord("heroesofstorm");
    }
 
    public void addWordAsHistory(String inputWord, String selectedWord) {
@@ -62,10 +80,23 @@ public class WordManager {
                return;
 
          Integer count = this.getWordCounter().get(inputWord);
-         if (count != null)
+         if (count != null) {
             count++;
-         else
+            /* db 단어 카운트 갱신 */
+            try {
+               this.dbManager.updateCount(inputWord);
+            } catch (SQLException e) {
+               e.printStackTrace();
+            }
+         } else {
             count = 1;
+            /* db에 단어 삽입 */
+            try {
+               this.dbManager.insertWord(inputWord);
+            } catch (SQLException e) {
+               e.printStackTrace();
+            }
+         }
          this.getWordCounter().put(inputWord.toString(), count);
          System.out.println("Counted Word: \"" + inputWord.toString() + "\", count: " + count);
       }
@@ -76,7 +107,7 @@ public class WordManager {
     * @return
     */
    public Vector<String> getMatchingWords(String inputWord) {
-      Vector<String> matchingWords = new Vector<String>();
+      Vector<String> matchingWords = new Vector<>();
       for (String str : this.getWordCounter().keySet()) {
          if (str.length() < inputWord.length())
             continue;
@@ -177,6 +208,12 @@ public class WordManager {
     */
    public void removeWord(String targetWord) {
       this.wordCounter.remove(targetWord);
+      try {
+         // db에서 제거
+         this.dbManager.deleteWord(targetWord);
+      } catch (SQLException e) {
+         e.printStackTrace();
+      }
    }
 
    /**
