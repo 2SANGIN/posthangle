@@ -13,13 +13,12 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import hjsi.posthangeul.action.FileSaveAction;
-import hjsi.posthangeul.editor.HangeulAssembler;
-import hjsi.posthangeul.editor.SwiftEditor;
-import hjsi.posthangeul.editor.VisibleCaretListener;
-
 import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.editor.HangeulAssembler;
+import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.SwiftEditor;
+import hjsi.posthangeul.editor.VisibleCaretListener;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
 
@@ -64,18 +63,14 @@ public class PostHangeulApp {
       /* create menu */
       this.shortcuts = new Shortcut(this, 24);
       this.recorder = new Recorder(this, 24);
-      topMenu.add(shortcuts);
-      topMenu.add(recorder);
-
-      SwingUtilities.invokeLater(new Runnable() {
-         @Override
-         public void run() {
-            player = new Player(PostHangeulApp.this);
-            player.setVisible(true);
-            topMenu.add(player);
-         }
+      this.topMenu.add(this.shortcuts);
+      this.topMenu.add(this.recorder);
+      SwingUtilities.invokeLater(() -> {
+         PostHangeulApp.this.player = new Player(PostHangeulApp.this);
+         PostHangeulApp.this.player.setVisible(true);
+         PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
       });
-
+      this.mainWindow.getContentPane().add(this.topMenu, BorderLayout.NORTH);
 
       /* add editor */
       this.editor = new SwiftEditor();
@@ -85,8 +80,8 @@ public class PostHangeulApp {
       this.mainWindow.getContentPane().add(this.editor, BorderLayout.CENTER);
 
       /* create main window */
-      this.mainWindow.setBounds(0, 0, 800, 480);
-      mainWindow.setMinimumSize(new Dimension(900, 480));
+      this.mainWindow.setBounds(0, 0, 900, 480);
+      this.mainWindow.setMinimumSize(new Dimension(900, 480));
       this.mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       this.mainWindow.setLocationRelativeTo(null);
       this.mainWindow.setVisible(true);

@@ -53,7 +53,7 @@ public class Player extends JPanel implements ActionListener {
    private File fpPath = new File("resources");
 
    public Player(PostHangeulApp app) {
-      setLayout(new GridBagLayout());
+      this.setLayout(new GridBagLayout());
 
       // setPreferredSize(new Dimension(app.getWindow().getWidth(), 100));
 
@@ -63,67 +63,67 @@ public class Player extends JPanel implements ActionListener {
 
       /* set icon */
       try {
-         image = ImageIO.read(new File(fpPath, "Open.png")).getScaledInstance(12, 12,
+         this.image = ImageIO.read(new File(this.fpPath, "Open.png")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         buttonOpen.setIcon(new ImageIcon(image));
+         this.buttonOpen.setIcon(new ImageIcon(this.image));
 
-         image = ImageIO.read(new File(fpPath, "Play.gif")).getScaledInstance(12, 12,
+         this.image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         buttonPlay.setIcon(new ImageIcon(image));
+         this.buttonPlay.setIcon(new ImageIcon(this.image));
 
-         image = ImageIO.read(new File(fpPath, "Pause.png")).getScaledInstance(12, 12,
+         this.image = ImageIO.read(new File(this.fpPath, "Pause.png")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         buttonPause.setIcon(new ImageIcon(image));
+         this.buttonPause.setIcon(new ImageIcon(this.image));
       } catch (IOException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
 
 
-      buttonOpen.setFont(new Font("Sans", Font.BOLD, 14));
+      this.buttonOpen.setFont(new Font("Sans", Font.BOLD, 14));
 
-      buttonPlay.setFont(new Font("Sans", Font.BOLD, 14));
-      buttonPlay.setEnabled(false);
+      this.buttonPlay.setFont(new Font("Sans", Font.BOLD, 14));
+      this.buttonPlay.setEnabled(false);
 
-      buttonPause.setFont(new Font("Sans", Font.BOLD, 14));
-      buttonPause.setEnabled(false);
+      this.buttonPause.setFont(new Font("Sans", Font.BOLD, 14));
+      this.buttonPause.setEnabled(false);
 
-      labelTimeCounter.setFont(new Font("Sans", Font.BOLD, 12));
-      labelDuration.setFont(new Font("Sans", Font.BOLD, 12));
+      this.labelTimeCounter.setFont(new Font("Sans", Font.BOLD, 12));
+      this.labelDuration.setFont(new Font("Sans", Font.BOLD, 12));
 
-      sliderTime.setPreferredSize(new Dimension(400, 20));
-      sliderTime.setEnabled(false);
-      sliderTime.setValue(0);
+      this.sliderTime.setPreferredSize(new Dimension(400, 20));
+      this.sliderTime.setEnabled(false);
+      this.sliderTime.setValue(0);
 
       JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
-      panelButtons.add(buttonOpen);
-      panelButtons.add(buttonPlay);
-      panelButtons.add(buttonPause);
+      panelButtons.add(this.buttonOpen);
+      panelButtons.add(this.buttonPlay);
+      panelButtons.add(this.buttonPause);
 
       constraints.gridwidth = 3;
       constraints.gridx = 3;
-      add(panelButtons, constraints);
+      this.add(panelButtons, constraints);
 
       constraints.gridx = 0;
       constraints.gridy = 0;
       constraints.gridwidth = 3;
-      add(labelFileName, constraints);
+      this.add(this.labelFileName, constraints);
 
       constraints.anchor = GridBagConstraints.CENTER;
       constraints.gridy = 1;
       constraints.gridwidth = 1;
-      add(labelTimeCounter, constraints);
+      this.add(this.labelTimeCounter, constraints);
 
       constraints.gridx = 1;
-      add(sliderTime, constraints);
+      this.add(this.sliderTime, constraints);
 
       constraints.gridx = 2;
-      add(labelDuration, constraints);
+      this.add(this.labelDuration, constraints);
 
 
-      buttonOpen.addActionListener(this);
-      buttonPlay.addActionListener(this);
-      buttonPause.addActionListener(this);
+      this.buttonOpen.addActionListener(this);
+      this.buttonPlay.addActionListener(this);
+      this.buttonPause.addActionListener(this);
    }
 
    @Override
@@ -133,19 +133,19 @@ public class Player extends JPanel implements ActionListener {
 
       if (source instanceof JButton) {
          JButton button = (JButton) source;
-         if (button == buttonOpen) {
-            openFile();
-         } else if (button == buttonPlay) {
-            if (!isPlaying) {
-               playBack();
+         if (button == this.buttonOpen) {
+            this.openFile();
+         } else if (button == this.buttonPlay) {
+            if (!this.isPlaying) {
+               this.playBack();
             } else {
-               stopPlaying();
+               this.stopPlaying();
             }
-         } else if (button == buttonPause) {
-            if (!isPause) {
-               pausePlaying();
+         } else if (button == this.buttonPause) {
+            if (!this.isPause) {
+               this.pausePlaying();
             } else {
-               resumePlaying();
+               this.resumePlaying();
             }
          }
       }
@@ -155,18 +155,13 @@ public class Player extends JPanel implements ActionListener {
    private void openFile() {
       JFileChooser fileChooser = null;
 
-      if (lastOpenPath != null && !lastOpenPath.equals("")) {
-         fileChooser = new JFileChooser(lastOpenPath);
+      if (this.lastOpenPath != null && !this.lastOpenPath.equals("")) {
+         fileChooser = new JFileChooser(this.lastOpenPath);
       } else {
          fileChooser = new JFileChooser();
       }
 
       FileFilter wavFilter = new FileFilter() {
-         @Override
-         public String getDescription() {
-            return "Sound file (*.WAV)";
-         }
-
          @Override
          public boolean accept(File file) {
             if (file.isDirectory()) {
@@ -174,6 +169,11 @@ public class Player extends JPanel implements ActionListener {
             } else {
                return file.getName().toLowerCase().endsWith(".wav");
             }
+         }
+
+         @Override
+         public String getDescription() {
+            return "Sound file (*.WAV)";
          }
       };
 
@@ -184,11 +184,11 @@ public class Player extends JPanel implements ActionListener {
 
       int userChoice = fileChooser.showOpenDialog(this);
       if (userChoice == JFileChooser.APPROVE_OPTION) {
-         audioFilePath = fileChooser.getSelectedFile().getAbsolutePath();
-         lastOpenPath = fileChooser.getSelectedFile().getParent();
-         if (isPlaying || isPause) {
-            stopPlaying();
-            while (player.getAudioClip().isRunning()) {
+         this.audioFilePath = fileChooser.getSelectedFile().getAbsolutePath();
+         this.lastOpenPath = fileChooser.getSelectedFile().getParent();
+         if (this.isPlaying || this.isPause) {
+            this.stopPlaying();
+            while (this.player.getAudioClip().isRunning()) {
                try {
                   Thread.sleep(100);
                } catch (InterruptedException ex) {
@@ -196,114 +196,110 @@ public class Player extends JPanel implements ActionListener {
                }
             }
          }
-         playBack();
+         this.playBack();
       }
+   }
+
+   private void pausePlaying() {
+      this.buttonPause.setText("Resume");
+      this.isPause = true;
+      this.player.pause();
+      this.timer.pauseTimer();
+      this.playbackThread.interrupt();
    }
 
    /**
     * Start playing back the sound.
     */
    private void playBack() {
-      timer = new PlayingTimer(labelTimeCounter, sliderTime);
-      timer.start();
-      isPlaying = true;
+      this.timer = new PlayingTimer(this.labelTimeCounter, this.sliderTime);
+      this.timer.start();
+      this.isPlaying = true;
       try {
-         image = ImageIO.read(new File(fpPath, "Stop.gif")).getScaledInstance(12, 12,
+         this.image = ImageIO.read(new File(this.fpPath, "Stop.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
       } catch (IOException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
 
-      playbackThread = new Thread(new Runnable() {
+      this.playbackThread = new Thread(() -> {
+         try {
 
-         @Override
-         public void run() {
-            try {
+            Player.this.buttonPlay.setText("Stop");
+            Player.this.buttonPlay.setIcon(new ImageIcon(Player.this.image));
+            Player.this.buttonPlay.setEnabled(true);
 
-               buttonPlay.setText("Stop");
-               buttonPlay.setIcon(new ImageIcon(image));
-               buttonPlay.setEnabled(true);
+            Player.this.buttonPause.setText("Pause");
+            Player.this.buttonPause.setEnabled(true);
 
-               buttonPause.setText("Pause");
-               buttonPause.setEnabled(true);
+            Player.this.player.load(Player.this.audioFilePath);
+            Player.this.timer.setAudioClip(Player.this.player.getAudioClip());
+            Player.this.labelFileName.setText("Playing File: " + Player.this.audioFilePath);
+            Player.this.sliderTime.setMaximum((int) Player.this.player.getClipSecondLength());
 
-               player.load(audioFilePath);
-               timer.setAudioClip(player.getAudioClip());
-               labelFileName.setText("Playing File: " + audioFilePath);
-               sliderTime.setMaximum((int) player.getClipSecondLength());
+            Player.this.labelDuration.setText(Player.this.player.getClipLengthString());
+            Player.this.player.play();
 
-               labelDuration.setText(player.getClipLengthString());
-               player.play();
+            Player.this.resetControls();
 
-               resetControls();
-
-            } catch (UnsupportedAudioFileException ex) {
-               JOptionPane.showMessageDialog(Player.this, "The audio format is unsupported!",
-                     "Error", JOptionPane.ERROR_MESSAGE);
-               resetControls();
-               ex.printStackTrace();
-            } catch (LineUnavailableException ex) {
-               JOptionPane.showMessageDialog(Player.this,
-                     "Could not play the audio file because line is unavailable!", "Error",
-                     JOptionPane.ERROR_MESSAGE);
-               resetControls();
-               ex.printStackTrace();
-            } catch (IOException ex) {
-               JOptionPane.showMessageDialog(Player.this, "I/O error while playing the audio file!",
-                     "Error", JOptionPane.ERROR_MESSAGE);
-               resetControls();
-               ex.printStackTrace();
-            }
-
+         } catch (UnsupportedAudioFileException ex1) {
+            JOptionPane.showMessageDialog(Player.this, "The audio format is unsupported!", "Error",
+                  JOptionPane.ERROR_MESSAGE);
+            Player.this.resetControls();
+            ex1.printStackTrace();
+         } catch (LineUnavailableException ex2) {
+            JOptionPane.showMessageDialog(Player.this,
+                  "Could not play the audio file because line is unavailable!", "Error",
+                  JOptionPane.ERROR_MESSAGE);
+            Player.this.resetControls();
+            ex2.printStackTrace();
+         } catch (IOException ex3) {
+            JOptionPane.showMessageDialog(Player.this, "I/O error while playing the audio file!",
+                  "Error", JOptionPane.ERROR_MESSAGE);
+            Player.this.resetControls();
+            ex3.printStackTrace();
          }
+
       });
 
-      playbackThread.start();
-   }
-
-   private void stopPlaying() {
-      isPause = false;
-      buttonPause.setText("Pause");
-      buttonPause.setEnabled(false);
-      timer.reset();
-      timer.interrupt();
-      player.stop();
-      playbackThread.interrupt();
-   }
-
-   private void pausePlaying() {
-      buttonPause.setText("Resume");
-      isPause = true;
-      player.pause();
-      timer.pauseTimer();
-      playbackThread.interrupt();
-   }
-
-   private void resumePlaying() {
-      buttonPause.setText("Pause");
-      isPause = false;
-      player.resume();
-      timer.resumeTimer();
-      playbackThread.interrupt();
+      this.playbackThread.start();
    }
 
    private void resetControls() {
-      timer.reset();
-      timer.interrupt();
+      this.timer.reset();
+      this.timer.interrupt();
       try {
-         image = ImageIO.read(new File(fpPath, "Play.png")).getScaledInstance(12, 12,
+         this.image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
       } catch (IOException e) {
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
 
-      buttonPlay.setText("Play");
-      buttonPlay.setIcon(new ImageIcon(image));
+      this.buttonPlay.setText("Play");
+      this.buttonPlay.setIcon(new ImageIcon(this.image));
 
-      buttonPause.setEnabled(false);
+      this.buttonPause.setEnabled(false);
 
-      isPlaying = false;
+      this.isPlaying = false;
+   }
+
+   private void resumePlaying() {
+      this.buttonPause.setText("Pause");
+      this.isPause = false;
+      this.player.resume();
+      this.timer.resumeTimer();
+      this.playbackThread.interrupt();
+   }
+
+   private void stopPlaying() {
+      this.isPause = false;
+      this.buttonPause.setText("Pause");
+      this.buttonPause.setEnabled(false);
+      this.timer.reset();
+      this.timer.interrupt();
+      this.player.stop();
+      this.playbackThread.interrupt();
    }
 }
