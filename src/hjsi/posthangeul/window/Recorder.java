@@ -16,6 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 import hjsi.posthangeul.recorder.SoundRecordingUtil;
 
@@ -28,12 +29,23 @@ import hjsi.posthangeul.recorder.SoundRecordingUtil;
 public class Recorder extends JPanel {
    @SuppressWarnings("javadoc")
    private static final long serialVersionUID = 1975693916367457094L;
-   private JPanel recordMenu;
+
+   /**
+    * 녹음 시작, 중지 버튼
+    */
    private JButton btnRecord;
+   /**
+    * 녹음 일시정지, 재개 버튼
+    */
+   private JButton btnResume;
+
    private JLabel msg;
    private boolean isRecording = false;
    private boolean isPlaying = false;
 
+   /**
+    * 실제 녹음을 진행하는 객체
+    */
    private SoundRecordingUtil recorder;
 
    /**
@@ -42,19 +54,24 @@ public class Recorder extends JPanel {
     * @param btnSize
     */
    public Recorder(int btnSize) {
-      this.setLayout(new FlowLayout(FlowLayout.LEFT));
+      this.setBackground(Color.LIGHT_GRAY);
+      this.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
+      this.setBorder(new EmptyBorder(5, 0, 5, 0));
 
-      Image image = null;
-      File fpPath = new File("resources");
-
-      /* set image to each buttons */
-      this.recordMenu = new JPanel();
+      /* set default to buttons & label */
+      Dimension preferredSize = new Dimension(120, 30);
       this.btnRecord = new JButton("Record");
       this.btnRecord.setFont(new Font("Sans", Font.BOLD, 14));
+      this.btnRecord.setPreferredSize(preferredSize);
+      this.btnResume = new JButton("pause");
+      this.btnResume.setFont(new Font("Sans", Font.BOLD, 14));
+      this.btnResume.setPreferredSize(preferredSize);
+      this.btnResume.setEnabled(false);
       this.msg = new JLabel("Recording is ready");
 
-      this.recordMenu.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
-
+      /* set image to each buttons */
+      Image image = null;
+      File fpPath = new File("resources");
       try {
          image = ImageIO.read(new File(fpPath, "Record.png")).getScaledInstance(btnSize, btnSize,
                Image.SCALE_AREA_AVERAGING);
@@ -67,10 +84,9 @@ public class Recorder extends JPanel {
       this.msg.setBackground(this.getBackground());
       this.msg.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
-      this.recordMenu.add(this.btnRecord);
-      this.recordMenu.add(this.msg);
-
-      this.add(this.recordMenu);
+      this.add(this.btnRecord);
+      this.add(this.btnResume);
+      this.add(this.msg);
 
       this.recorder = new SoundRecordingUtil(this.msg);
 
@@ -80,30 +96,40 @@ public class Recorder extends JPanel {
          if (!Recorder.this.isRecording) {
             Recorder.this.isRecording = true;
             Recorder.this.btnRecord.setText("stop");
-
-            System.out.println("Start recording...");
+            Recorder.this.btnResume.setEnabled(true);
             this.recorder.startRecording();
+            System.out.println("RECORDING STARTED!");
          }
 
          /* 녹음 중지 */
          else if (Recorder.this.isRecording) {
+            /* 재개 버튼 원상태로 돌리기 */
+            this.btnResume.setText("pause");
+            this.recorder.resumeRecording();
+
             Recorder.this.isRecording = false;
             Recorder.this.btnRecord.setText("Record");
-
-            try {
-               byte[] soundBinaries = this.recorder.stopRecording();
-               this.recorder.save(Recorder.this.getNowTime(), soundBinaries);
-            } catch (IOException e1) {
-               e1.printStackTrace();
-            }
-            Recorder.this.msg.setText("File saved successfully!");
-            Recorder.this.msg.setForeground(Color.BLACK);
-            System.out.println("STOPPED");
-
+            Recorder.this.btnResume.setEnabled(false);
+            byte[] soundBinaries = this.recorder.stopRecording(); // 자동으로 저장한다
+            this.recorder.save(Recorder.this.getNowTime(), soundBinaries);
+            System.out.println("RECORDING STOPPED!");
          }
       });
 
-      System.out.println("DONE");
+      /* 녹음 일시중지/재개 버튼의 리스너를 등록한다. */
+      this.btnResume.addActionListener(e -> {
+         /* 녹음 일시중지 */
+         if (!this.recorder.isPaused()) {
+            this.btnResume.setText("resume");
+            this.recorder.pauseRecording();
+         }
+
+         /* 녹음 재개 */
+         else if (this.recorder.isPaused()) {
+            this.btnResume.setText("pause");
+            this.recorder.resumeRecording();
+         }
+      });
    }
 
    public String getNowTime() {

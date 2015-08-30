@@ -1,5 +1,6 @@
 package hjsi.posthangeul.recorder;
 
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,6 +27,9 @@ public class SoundRecordingUtil implements Runnable {
     */
    private static final String timeFormat = "%02d:%02d:%02d";
 
+   /**
+    * 한 번에 읽어들일 버퍼 크기
+    */
    private static final int BUFFER_SIZE = 4096;
 
    /**
@@ -33,7 +37,7 @@ public class SoundRecordingUtil implements Runnable {
     *
     * @return a default audio format
     */
-   static AudioFormat getAudioFormat() {
+   private static AudioFormat getAudioFormat() {
       float sampleRate = 16000;
       int sampleSizeInBits = 8;
       int channels = 2;
@@ -53,6 +57,11 @@ public class SoundRecordingUtil implements Runnable {
    private boolean isRunning = false;
 
    /**
+    * 녹음 쓰레드의 일시정지에 사용되는 변수
+    */
+   private boolean isPaused = false;
+
+   /**
     * 녹음할 사운드 파일 포맷
     */
    private final AudioFormat format;
@@ -62,6 +71,9 @@ public class SoundRecordingUtil implements Runnable {
     */
    private ByteArrayOutputStream recordBytes;
 
+   /**
+    * 오디오라인
+    */
    private TargetDataLine audioLine;
 
    /**
@@ -90,6 +102,49 @@ public class SoundRecordingUtil implements Runnable {
       }
    }
 
+   /**
+    * 현재 일시중지 되어있는지 상태를 가져온다.
+    *
+    * @return 일시중지 중이라면 true, 녹음 중/재개 상태라면 false
+    */
+   public boolean isPaused() {
+      return this.isPaused;
+   }
+
+   /**
+    * 녹음을 일시중지한다.
+    *
+    * @throws IllegalStateException 녹음 중이 아닐 때 혹은 이미 멈춰있을 때 발생
+    */
+   public void pauseRecording() throws IllegalStateException {
+      if (this.isRunning) {
+         if (this.isPaused)
+            throw new IllegalStateException("이미 일시중지 상태임");
+
+         this.isPaused = true;
+         if (this.audioLine != null)
+            this.audioLine.stop();
+      } else
+         throw new IllegalStateException("녹음 중이 아니라서 일시정지 할 수 없음.");
+   }
+
+   /**
+    * 녹음을 재개한다.
+    *
+    * @throws IllegalStateException 녹음 중이 아닐 때 혹은 이미 재개되었을 때 발생
+    */
+   public void resumeRecording() throws IllegalStateException {
+      if (this.isRunning) {
+         if (!this.isPaused)
+            throw new IllegalStateException("이미 재개된 상태임");
+
+         this.isPaused = false;
+         if (this.audioLine != null)
+            this.audioLine.start();
+      } else
+         throw new IllegalStateException("녹음 중이 아니라서 재개 할 수 없음.");
+   }
+
    /*
     * (non-Javadoc)
     *
@@ -108,9 +163,13 @@ public class SoundRecordingUtil implements Runnable {
          this.audioLine.start();
 
          while (this.isRunning) {
-            bytesRead = this.audioLine.read(buffer, 0, buffer.length);
-            this.recordBytes.write(buffer, 0, bytesRead);
-            this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
+            if (this.isPaused) {
+               Thread.yield();
+            } else {
+               bytesRead = this.audioLine.read(buffer, 0, buffer.length);
+               this.recordBytes.write(buffer, 0, bytesRead);
+               this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
+            }
          }
 
          this.audioLine.stop();
@@ -123,40 +182,54 @@ public class SoundRecordingUtil implements Runnable {
    }
 
    /**
-    * Save recorded sound data into a .wav file format.
+    * Save recorded sound data into a .wav file format by <b>thread.</b>
     *
     * @param wavFileName The file name to be saved. The name is exclusive extension.
     * @param binaries The sound binaries to be saved.
-    * @throws IOException if any I/O error occurs.
     */
-   public void save(String wavFileName, byte[] binaries) throws IOException {
-      if (binaries != null) {
-         File path = new File("records");
+   public void save(String wavFileName, byte[] binaries) {
+      Thread saveEmployee = new Thread(() -> {
+         if (binaries != null) {
+            File path = new File("records");
 
-         if (!path.exists()) {
-            if (path.mkdir())
-               System.out.println(path.toString() + " 디렉토리를 생성했습니다.");
-            else {
-               System.out.println(path.toString() + " 디렉토리 생성에 실패했습니다.");
-               System.exit(-1);
+            if (!path.exists()) {
+               if (path.mkdir())
+                  System.out.println(path.toString() + " 디렉토리를 생성했습니다.");
+               else {
+                  System.out.println(path.toString() + " 디렉토리 생성에 실패했습니다.");
+                  System.exit(-1);
+               }
+            }
+            File wavFile = new File(path, wavFileName + ".wav");
+            ByteArrayInputStream bais = new ByteArrayInputStream(binaries);
+
+            AudioInputStream audioInputStream = null;
+            try {
+               audioInputStream = new AudioInputStream(bais, this.format,
+                     binaries.length / this.format.getFrameSize());
+               AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, wavFile);
+               System.out.println(wavFile.toString() + " is saved!");
+            } catch (IOException e) {
+               e.printStackTrace();
+            } finally {
+               try {
+                  if (audioInputStream != null)
+                     audioInputStream.close();
+               } catch (Exception e) {
+                  e.printStackTrace();
+               }
             }
          }
-         File wavFile = new File(path, wavFileName + ".wav");
-         ByteArrayInputStream bais = new ByteArrayInputStream(binaries);
-
-         AudioInputStream audioInputStream = null;
+         this.timeIndicator.setForeground(Color.BLACK);
+         this.timeIndicator.setText("File saved successfully!");
          try {
-            audioInputStream = new AudioInputStream(bais, this.format,
-                  binaries.length / this.format.getFrameSize());
-            AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, wavFile);
-            System.out.println(wavFile.toString() + " is saved!");
-         } catch (IOException e) {
+            Thread.sleep(2000);
+         } catch (Exception e) {
             e.printStackTrace();
-         } finally {
-            if (audioInputStream != null)
-               audioInputStream.close();
          }
-      }
+         this.timeIndicator.setText("Recording is ready");
+      });
+      saveEmployee.start();
    }
 
    /**
@@ -172,9 +245,8 @@ public class SoundRecordingUtil implements Runnable {
     * Stop recording sound. and return sound binaries.
     *
     * @return 녹음한 사운드의 바이너리 데이터
-    * @throws IOException if any I/O error occurs.
     */
-   public byte[] stopRecording() throws IOException {
+   public byte[] stopRecording() {
       this.isRunning = false;
       if (this.audioLine != null) {
          try {
@@ -187,9 +259,13 @@ public class SoundRecordingUtil implements Runnable {
       }
 
       byte[] soundBinaries = null;
-      if (this.recordBytes != null) {
-         soundBinaries = this.recordBytes.toByteArray();
-         this.recordBytes.close();
+      try {
+         if (this.recordBytes != null) {
+            soundBinaries = this.recordBytes.toByteArray();
+            this.recordBytes.close();
+         }
+      } catch (IOException e) {
+         e.printStackTrace();
       }
       return soundBinaries;
    }
