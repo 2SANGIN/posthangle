@@ -18,8 +18,8 @@ import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
-import hjsi.posthangeul.window.soundpanel.PlayingPanel;
 import hjsi.posthangeul.editor.VisibleCaretListener;
+import hjsi.posthangeul.window.soundpanel.PlayingPanel;
 
 
 public class PostHangeulApp {
@@ -108,6 +108,7 @@ public class PostHangeulApp {
    public JFrame getWindow() {
       return this.mainWindow;
    }
+
 
    /**
     * @param currentFile the currentFile to set
