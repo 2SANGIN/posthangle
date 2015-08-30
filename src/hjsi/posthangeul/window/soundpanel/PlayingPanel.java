@@ -36,14 +36,14 @@ import hjsi.posthangeul.window.PostHangeulApp;
  *
  * @author HYUNJIN
  */
-public class PlayingPannel extends JPanel implements ActionListener {
+public class PlayingPanel extends JPanel implements ActionListener {
    @SuppressWarnings("javadoc")
    private static final long serialVersionUID = 8049094210188913162L;
 
    /**
     * 녹음 객체
     */
-   private RecordingPannel recorder = new RecordingPannel(36);
+   private RecordingPanel recorder = new RecordingPanel(36);
 
    /**
     *
@@ -75,7 +75,7 @@ public class PlayingPannel extends JPanel implements ActionListener {
 
    private File fpPath = new File("resources");
 
-   public PlayingPannel(PostHangeulApp app) {
+   public PlayingPanel(PostHangeulApp app) {
 
       Image image = null;
       ImageIcon iconOpen = null;
@@ -253,33 +253,33 @@ public class PlayingPannel extends JPanel implements ActionListener {
 
       this.playbackThread = new Thread(() -> {
          try {
-            PlayingPannel.this.player.load(PlayingPannel.this.audioFilePath);
-            PlayingPannel.this.labelFileName
-                  .setText("Playing File: " + PlayingPannel.this.audioFilePath);
-            PlayingPannel.this.sliderTimeProgress
-                  .setMaximum((int) PlayingPannel.this.player.getClipSecondLength());
+            this.player.load(this.audioFilePath);
+            File path = new File(this.audioFilePath);
 
-            PlayingPannel.this.labelTimeDuration
-                  .setText(PlayingPannel.this.player.getClipLengthString());
-            PlayingPannel.this.player.play();
+            this.labelFileName.setText("Playing File: " + path.getName());
 
-            PlayingPannel.this.resetControls();
+            this.sliderTimeProgress
+                  .setMaximum((int) PlayingPanel.this.player.getClipSecondLength());
+            this.labelTimeDuration.setText(PlayingPanel.this.player.getClipLengthString());
+
+            this.player.play();
+            this.resetControls();
 
          } catch (UnsupportedAudioFileException ex1) {
-            JOptionPane.showMessageDialog(PlayingPannel.this, "The audio format is unsupported!",
-                  "Error", JOptionPane.ERROR_MESSAGE);
-            PlayingPannel.this.resetControls();
+            JOptionPane.showMessageDialog(this, "The audio format is unsupported!", "Error",
+                  JOptionPane.ERROR_MESSAGE);
+            this.resetControls();
             ex1.printStackTrace();
          } catch (LineUnavailableException ex2) {
-            JOptionPane.showMessageDialog(PlayingPannel.this,
+            JOptionPane.showMessageDialog(PlayingPanel.this,
                   "Could not play the audio file because line is unavailable!", "Error",
                   JOptionPane.ERROR_MESSAGE);
-            PlayingPannel.this.resetControls();
+            PlayingPanel.this.resetControls();
             ex2.printStackTrace();
          } catch (IOException ex3) {
-            JOptionPane.showMessageDialog(PlayingPannel.this,
+            JOptionPane.showMessageDialog(PlayingPanel.this,
                   "I/O error while playing the audio file!", "Error", JOptionPane.ERROR_MESSAGE);
-            PlayingPannel.this.resetControls();
+            PlayingPanel.this.resetControls();
             ex3.printStackTrace();
          }
 

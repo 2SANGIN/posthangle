@@ -18,7 +18,7 @@ import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
-import hjsi.posthangeul.window.soundpanel.PlayingPannel;
+import hjsi.posthangeul.window.soundpanel.PlayingPanel;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
 
@@ -62,7 +62,7 @@ public class PostHangeulApp {
       /* create menu */
       this.shortcuts = new Shortcut(this, 24);
       this.topMenu.add(this.shortcuts);
-      PostHangeulApp.this.player = new PlayingPannel(PostHangeulApp.this); // create player
+      PostHangeulApp.this.player = new PlayingPanel(PostHangeulApp.this); // create player
       PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
       this.mainWindow.getContentPane().add(this.topMenu, BorderLayout.NORTH);
 

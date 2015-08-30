@@ -24,7 +24,7 @@ import hjsi.posthangeul.recorder.SoundRecordingUtil;
  *
  * @author HYUNJIN
  */
-public class RecordingPannel extends JPanel {
+public class RecordingPanel extends JPanel {
    @SuppressWarnings("javadoc")
    private static final long serialVersionUID = 1975693916367457094L;
 
@@ -114,7 +114,7 @@ public class RecordingPannel extends JPanel {
     *
     * @param btnSize 버튼 이미지 크기
     */
-   public RecordingPannel(int btnSize) {
+   public RecordingPanel(int btnSize) {
       this.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 2));
 
       File resPath = new File("resources/button");
@@ -191,7 +191,7 @@ public class RecordingPannel extends JPanel {
          else if (!this.btnRecord.isSelected()) {
             this.btnPause.setEnabled(false);
             byte[] soundBinaries = this.recorder.stopRecording(); // 자동으로 저장한다
-            this.recorder.save(RecordingPannel.this.getNowTime(), soundBinaries);
+            this.recorder.save(RecordingPanel.this.getNowTime(), soundBinaries);
             System.out.println("RECORDING STOPPED!");
          }
       });
