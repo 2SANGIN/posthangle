@@ -162,14 +162,26 @@ public class SoundRecordingUtil implements Runnable {
          this.audioLine.open(this.format);
          this.audioLine.start();
 
+         Color fg = this.timeIndicator.getForeground();
+         Color bg = this.timeIndicator.getBackground();
+
          while (this.isRunning) {
-            if (this.isPaused) {
-               Thread.yield();
-            } else {
-               bytesRead = this.audioLine.read(buffer, 0, buffer.length);
-               this.recordBytes.write(buffer, 0, bytesRead);
-               this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
+            while (this.isPaused) {
+               try {
+                  Thread.sleep(500);
+                  if (this.timeIndicator.getForeground() == bg)
+                     this.timeIndicator.setForeground(fg);
+                  else
+                     this.timeIndicator.setForeground(bg);
+               } catch (InterruptedException e) {
+                  e.printStackTrace();
+               }
             }
+            this.timeIndicator.setForeground(fg);
+
+            bytesRead = this.audioLine.read(buffer, 0, buffer.length);
+            this.recordBytes.write(buffer, 0, bytesRead);
+            this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
          }
 
          this.audioLine.stop();
@@ -220,14 +232,14 @@ public class SoundRecordingUtil implements Runnable {
                }
             }
          }
-         this.timeIndicator.setForeground(Color.BLACK);
-         this.timeIndicator.setText("File saved successfully!");
+         System.out.println("File saved successfully!");
          try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
          } catch (Exception e) {
             e.printStackTrace();
          }
-         this.timeIndicator.setText("Recording is ready");
+         System.out.println("Recording is ready");
+         this.timeIndicator.setText("00:00:00");
       });
       saveEmployee.start();
    }

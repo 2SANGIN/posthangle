@@ -10,7 +10,6 @@ import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import hjsi.posthangeul.action.FileSaveAction;
 import hjsi.posthangeul.action.FileSaveAction;
@@ -19,6 +18,7 @@ import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
+import hjsi.posthangeul.window.soundpanel.PlayingPannel;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
 
@@ -41,10 +41,9 @@ public class PostHangeulApp {
    JFrame mainWindow;
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
-   Recorder recorder;
    JPanel player;
-
    SwiftEditor editor;
+
    /* config of app instance */
    File currentFile = new File("제목 없음.rtf");
    String[] defaultFontFamilies = {"나눔바른고딕", "나눔고딕", "맑은 고딕", "새굴림", "굴림"};
@@ -62,13 +61,9 @@ public class PostHangeulApp {
 
       /* create menu */
       this.shortcuts = new Shortcut(this, 24);
-      this.recorder = new Recorder(24);
       this.topMenu.add(this.shortcuts);
-      this.topMenu.add(this.recorder);
-      SwingUtilities.invokeLater(() -> {
-         PostHangeulApp.this.player = new Player(PostHangeulApp.this); // create player
-         PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
-      });
+      PostHangeulApp.this.player = new PlayingPannel(PostHangeulApp.this); // create player
+      PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
       this.mainWindow.getContentPane().add(this.topMenu, BorderLayout.NORTH);
 
       /* add editor */

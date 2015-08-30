@@ -1,12 +1,9 @@
-package hjsi.posthangeul.window;
 
-import java.awt.Color;
+package hjsi.posthangeul.window.soundpanel;
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -15,6 +12,9 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -27,6 +27,7 @@ import javax.swing.filechooser.FileFilter;
 import hjsi.posthangeul.editor.autocomplete.AppFont;
 import hjsi.posthangeul.player.AudioPlayer;
 import hjsi.posthangeul.player.PlayingTimer;
+import hjsi.posthangeul.window.PostHangeulApp;
 
 
 /**
@@ -35,11 +36,23 @@ import hjsi.posthangeul.player.PlayingTimer;
  *
  * @author HYUNJIN
  */
-public class Player extends JPanel implements ActionListener {
+public class PlayingPannel extends JPanel implements ActionListener {
    @SuppressWarnings("javadoc")
    private static final long serialVersionUID = 8049094210188913162L;
 
+   /**
+    * 녹음 객체
+    */
+   private RecordingPannel recorder = new RecordingPannel(36);
+
+   /**
+    *
+    */
    private AudioPlayer player = new AudioPlayer();
+
+   /**
+    *
+    */
    private Thread playbackThread;
 
    private PlayingTimer timer;
@@ -54,20 +67,15 @@ public class Player extends JPanel implements ActionListener {
    private JLabel labelTimeElapsed = new JLabel("00:00:00");
    private JLabel labelTimeDuration = new JLabel("00:00:00");
 
-   private JButton buttonOpen = new JButton("Open");
-   private JButton buttonPlay = new JButton("Play");
-   private JButton buttonPause = new JButton("Pause");
+   private JButton btnOpen = new JButton("Open");
+   private JButton btnPlay = new JButton("Play");
+   private JButton btnPause = new JButton("Pause");
 
    private JSlider sliderTimeProgress = new JSlider();
 
    private File fpPath = new File("resources");
 
-   public Player(PostHangeulApp app) {
-      this.setLayout(new GridBagLayout());
-
-      GridBagConstraints constraints = new GridBagConstraints();
-      constraints.insets = new Insets(5, 5, 5, 5);
-      constraints.anchor = GridBagConstraints.LINE_START;
+   public PlayingPannel(PostHangeulApp app) {
 
       Image image = null;
       ImageIcon iconOpen = null;
@@ -91,16 +99,16 @@ public class Player extends JPanel implements ActionListener {
          e.printStackTrace();
       }
 
-      this.buttonOpen.setIcon(iconOpen);
-      this.buttonOpen.setFont(AppFont.fontSans.deriveFont(14f));
+      this.btnOpen.setIcon(iconOpen);
+      this.btnOpen.setFont(AppFont.fontSans.deriveFont(14f));
 
-      this.buttonPlay.setIcon(iconPlay);
-      this.buttonPlay.setFont(AppFont.fontSans.deriveFont(14f));
-      this.buttonPlay.setEnabled(false);
+      this.btnPlay.setIcon(iconPlay);
+      this.btnPlay.setFont(AppFont.fontSans.deriveFont(14f));
+      this.btnPlay.setEnabled(false);
 
-      this.buttonPause.setIcon(iconPause);
-      this.buttonPause.setFont(AppFont.fontSans.deriveFont(14f));
-      this.buttonPause.setEnabled(false);
+      this.btnPause.setIcon(iconPause);
+      this.btnPause.setFont(AppFont.fontSans.deriveFont(14f));
+      this.btnPause.setEnabled(false);
 
       this.labelTimeElapsed.setFont(AppFont.fontSans.deriveFont(12f));
       this.labelTimeDuration.setFont(AppFont.fontSans.deriveFont(12f));
@@ -109,25 +117,37 @@ public class Player extends JPanel implements ActionListener {
       this.sliderTimeProgress.setValue(0);
       this.sliderTimeProgress.setEnabled(false);
 
-      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-      panelButtons.setBackground(Color.cyan);
-      panelButtons.add(this.buttonOpen);
-      panelButtons.add(this.buttonPlay);
-      panelButtons.add(this.buttonPause);
+      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+      panelButtons.add(this.btnOpen);
+      panelButtons.add(Box.createHorizontalStrut(5));
+      panelButtons.add(this.btnPlay);
+      panelButtons.add(Box.createHorizontalStrut(5));
+      panelButtons.add(this.btnPause);
+      panelButtons.add(Box.createHorizontalStrut(5));
+      panelButtons.add(this.labelFileName);
 
-      JPanel panelSlider = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-      panelSlider.setBackground(Color.darkGray);
+      JPanel panelSlider = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
       panelSlider.add(this.labelTimeElapsed);
       panelSlider.add(this.sliderTimeProgress);
       panelSlider.add(this.labelTimeDuration);
 
-      this.add(panelButtons);
-      this.add(panelButtons);
-      this.add(this.labelFileName);
+      JPanel panelPlayer = new JPanel();
+      panelPlayer.setLayout(new BoxLayout(panelPlayer, BoxLayout.Y_AXIS));
+      panelPlayer.setAlignmentX(0.0f);
+      panelPlayer.add(Box.createVerticalStrut(2));
+      panelPlayer.add(panelButtons);
+      panelPlayer.add(Box.createVerticalStrut(2));
+      panelPlayer.add(panelSlider);
+      panelPlayer.add(Box.createVerticalStrut(2));
 
-      this.buttonOpen.addActionListener(this);
-      this.buttonPlay.addActionListener(this);
-      this.buttonPause.addActionListener(this);
+      this.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
+      this.add(this.recorder);
+      this.add(panelPlayer);
+      this.setBorder(BorderFactory.createEmptyBorder());
+
+      this.btnOpen.addActionListener(this);
+      this.btnPlay.addActionListener(this);
+      this.btnPause.addActionListener(this);
    }
 
    @Override
@@ -136,15 +156,16 @@ public class Player extends JPanel implements ActionListener {
 
       if (source instanceof JButton) {
          JButton button = (JButton) source;
-         if (button == this.buttonOpen) {
+         if (button == this.btnOpen) {
             this.openFile();
-         } else if (button == this.buttonPlay) {
+         } else if (button == this.btnPlay) {
             if (!this.isPlaying) {
                this.playBack();
             } else {
+               this.labelTimeElapsed.setText("00:00:00");
                this.stopPlaying();
             }
-         } else if (button == this.buttonPause) {
+         } else if (button == this.btnPause) {
             if (!this.isPause) {
                this.pausePlaying();
             } else {
@@ -168,9 +189,8 @@ public class Player extends JPanel implements ActionListener {
          public boolean accept(File file) {
             if (file.isDirectory()) {
                return true;
-            } else {
-               return file.getName().toLowerCase().endsWith(".wav");
             }
+            return file.getName().toLowerCase().endsWith(".wav");
          }
 
          @Override
@@ -203,10 +223,9 @@ public class Player extends JPanel implements ActionListener {
    }
 
    private void pausePlaying() {
-      this.buttonPause.setText("Resume");
+      this.btnPause.setText("Resume");
       this.isPause = true;
       this.player.pause();
-      this.timer.pauseTimer();
       this.playbackThread.interrupt();
    }
 
@@ -214,7 +233,7 @@ public class Player extends JPanel implements ActionListener {
     * Start playing back the sound.
     */
    private void playBack() {
-      this.timer = new PlayingTimer(this.labelTimeElapsed, this.sliderTimeProgress);
+      this.timer = new PlayingTimer(this.player, this.labelTimeElapsed, this.sliderTimeProgress);
       this.timer.start();
       this.isPlaying = true;
       Image image = null;
@@ -225,43 +244,42 @@ public class Player extends JPanel implements ActionListener {
          e.printStackTrace();
       }
 
-      this.buttonPlay.setText("Stop");
-      this.buttonPlay.setIcon(new ImageIcon(image));
-      this.buttonPlay.setEnabled(true);
+      this.btnPlay.setText("Stop");
+      this.btnPlay.setIcon(new ImageIcon(image));
+      this.btnPlay.setEnabled(true);
 
-      this.buttonPause.setText("Pause");
-      this.buttonPause.setEnabled(true);
+      this.btnPause.setText("Pause");
+      this.btnPause.setEnabled(true);
 
       this.playbackThread = new Thread(() -> {
          try {
+            PlayingPannel.this.player.load(PlayingPannel.this.audioFilePath);
+            PlayingPannel.this.labelFileName
+                  .setText("Playing File: " + PlayingPannel.this.audioFilePath);
+            PlayingPannel.this.sliderTimeProgress
+                  .setMaximum((int) PlayingPannel.this.player.getClipSecondLength());
 
+            PlayingPannel.this.labelTimeDuration
+                  .setText(PlayingPannel.this.player.getClipLengthString());
+            PlayingPannel.this.player.play();
 
-            Player.this.player.load(Player.this.audioFilePath);
-            Player.this.timer.setAudioClip(Player.this.player.getAudioClip());
-            Player.this.labelFileName.setText("Playing File: " + Player.this.audioFilePath);
-            Player.this.sliderTimeProgress
-                  .setMaximum((int) Player.this.player.getClipSecondLength());
-
-            Player.this.labelTimeDuration.setText(Player.this.player.getClipLengthString());
-            Player.this.player.play();
-
-            Player.this.resetControls();
+            PlayingPannel.this.resetControls();
 
          } catch (UnsupportedAudioFileException ex1) {
-            JOptionPane.showMessageDialog(Player.this, "The audio format is unsupported!", "Error",
-                  JOptionPane.ERROR_MESSAGE);
-            Player.this.resetControls();
+            JOptionPane.showMessageDialog(PlayingPannel.this, "The audio format is unsupported!",
+                  "Error", JOptionPane.ERROR_MESSAGE);
+            PlayingPannel.this.resetControls();
             ex1.printStackTrace();
          } catch (LineUnavailableException ex2) {
-            JOptionPane.showMessageDialog(Player.this,
+            JOptionPane.showMessageDialog(PlayingPannel.this,
                   "Could not play the audio file because line is unavailable!", "Error",
                   JOptionPane.ERROR_MESSAGE);
-            Player.this.resetControls();
+            PlayingPannel.this.resetControls();
             ex2.printStackTrace();
          } catch (IOException ex3) {
-            JOptionPane.showMessageDialog(Player.this, "I/O error while playing the audio file!",
-                  "Error", JOptionPane.ERROR_MESSAGE);
-            Player.this.resetControls();
+            JOptionPane.showMessageDialog(PlayingPannel.this,
+                  "I/O error while playing the audio file!", "Error", JOptionPane.ERROR_MESSAGE);
+            PlayingPannel.this.resetControls();
             ex3.printStackTrace();
          }
 
@@ -271,7 +289,6 @@ public class Player extends JPanel implements ActionListener {
    }
 
    private void resetControls() {
-      this.timer.reset();
       this.timer.interrupt();
       Image image = null;
       try {
@@ -281,27 +298,25 @@ public class Player extends JPanel implements ActionListener {
          e.printStackTrace();
       }
 
-      this.buttonPlay.setText("Play");
-      this.buttonPlay.setIcon(new ImageIcon(image));
+      this.btnPlay.setText("Play");
+      this.btnPlay.setIcon(new ImageIcon(image));
 
-      this.buttonPause.setEnabled(false);
+      this.btnPause.setEnabled(false);
 
       this.isPlaying = false;
    }
 
    private void resumePlaying() {
-      this.buttonPause.setText("Pause");
+      this.btnPause.setText("Pause");
       this.isPause = false;
       this.player.resume();
-      this.timer.resumeTimer();
       this.playbackThread.interrupt();
    }
 
    private void stopPlaying() {
       this.isPause = false;
-      this.buttonPause.setText("Pause");
-      this.buttonPause.setEnabled(false);
-      this.timer.reset();
+      this.btnPause.setText("Pause");
+      this.btnPause.setEnabled(false);
       this.timer.interrupt();
       this.player.stop();
       this.playbackThread.interrupt();

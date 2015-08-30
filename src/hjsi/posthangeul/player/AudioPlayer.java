@@ -35,40 +35,15 @@ public class AudioPlayer implements LineListener {
 
    private Clip audioClip;
 
-   /**
-    * Load audio file before playing back
-    * 
-    * @param audioFilePath Path of the audio file.
-    * @throws IOException
-    * @throws UnsupportedAudioFileException
-    * @throws LineUnavailableException
-    */
-   public void load(String audioFilePath)
-         throws UnsupportedAudioFileException, IOException, LineUnavailableException {
-      File audioFile = new File(audioFilePath);
-
-      AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-
-      AudioFormat format = audioStream.getFormat();
-
-      DataLine.Info info = new DataLine.Info(Clip.class, format);
-
-      audioClip = (Clip) AudioSystem.getLine(info);
-
-      audioClip.addLineListener(this);
-
-      audioClip.open(audioStream);
-   }
-
-   public long getClipSecondLength() {
-      return audioClip.getMicrosecondLength() / 1_000_000;
+   public Clip getAudioClip() {
+      return this.audioClip;
    }
 
    public String getClipLengthString() {
       String length = "";
       long hour = 0;
       long minute = 0;
-      long seconds = audioClip.getMicrosecondLength() / 1_000_000;
+      long seconds = this.audioClip.getMicrosecondLength() / 1_000_000;
 
       System.out.println(seconds);
 
@@ -96,56 +71,93 @@ public class AudioPlayer implements LineListener {
       return length;
    }
 
+   public long getClipSecondLength() {
+      return this.audioClip.getMicrosecondLength() / 1_000_000;
+   }
+
+   public boolean isPaused() {
+      return this.isPaused;
+   }
+
+   public boolean isRunning() {
+      return !this.playCompleted;
+   }
+
+   /**
+    * Load audio file before playing back
+    *
+    * @param audioFilePath Path of the audio file.
+    * @throws IOException
+    * @throws UnsupportedAudioFileException
+    * @throws LineUnavailableException
+    */
+   public void load(String audioFilePath)
+         throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+      File audioFile = new File(audioFilePath);
+
+      AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+
+      AudioFormat format = audioStream.getFormat();
+
+      DataLine.Info info = new DataLine.Info(Clip.class, format);
+
+      this.audioClip = (Clip) AudioSystem.getLine(info);
+
+      this.audioClip.addLineListener(this);
+
+      this.audioClip.open(audioStream);
+   }
+
+   public void pause() {
+      this.isPaused = true;
+   }
+
    /**
     * Play a given audio file.
-    * 
+    *
     * @throws IOException
     * @throws UnsupportedAudioFileException
     * @throws LineUnavailableException
     */
    public void play() throws IOException {
 
-      audioClip.start();
+      this.audioClip.start();
 
-      playCompleted = false;
-      isStopped = false;
+      this.playCompleted = false;
+      this.isStopped = false;
 
-      while (!playCompleted) {
+      while (!this.playCompleted) {
          // wait for the playback completes
          try {
             Thread.sleep(1000);
          } catch (InterruptedException ex) {
-            ex.printStackTrace();
-            if (isStopped) {
-               audioClip.stop();
+            if (this.isStopped) {
+               this.audioClip.stop();
                break;
             }
-            if (isPaused) {
-               audioClip.stop();
+            if (this.isPaused) {
+               this.audioClip.stop();
             } else {
-               System.out.println("!!!!");
-               audioClip.start();
+               this.audioClip.start();
             }
          }
       }
 
-      audioClip.close();
+      this.audioClip.close();
+   }
 
+   /**
+    * Resume playing here.
+    */
+   public void resume() {
+      this.isPaused = false;
    }
 
    /**
     * Stop playing back.
     */
    public void stop() {
-      isStopped = true;
-   }
-
-   public void pause() {
-      isPaused = true;
-   }
-
-   public void resume() {
-      isPaused = false;
+      this.isStopped = true;
    }
 
    /**
@@ -156,13 +168,9 @@ public class AudioPlayer implements LineListener {
       LineEvent.Type type = event.getType();
       if (type == LineEvent.Type.STOP) {
          System.out.println("STOP EVENT");
-         if (isStopped || !isPaused) {
-            playCompleted = true;
+         if (this.isStopped || !this.isPaused) {
+            this.playCompleted = true;
          }
       }
-   }
-
-   public Clip getAudioClip() {
-      return audioClip;
    }
 }
