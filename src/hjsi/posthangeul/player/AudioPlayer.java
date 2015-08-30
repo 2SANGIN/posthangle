@@ -21,19 +21,10 @@ public class AudioPlayer implements LineListener {
    private static final int SECONDS_IN_HOUR = 60 * 60;
    private static final int SECONDS_IN_MINUTE = 60;
 
-   /**
-    * this flag indicates whether the playback completes or not.
-    */
-   private boolean playCompleted;
-
-   /**
-    * this flag indicates whether the playback is stopped or not.
-    */
-   private boolean isStopped;
-
-   private boolean isPaused;
-
    private Clip audioClip;
+
+   private boolean isPlaying = false;
+   private boolean isPaused = false;
 
    public Clip getAudioClip() {
       return this.audioClip;
@@ -79,8 +70,12 @@ public class AudioPlayer implements LineListener {
       return this.isPaused;
    }
 
-   public boolean isRunning() {
-      return !this.playCompleted;
+   public boolean isPlaying() {
+      return this.isPlaying;
+   }
+
+   public boolean isStopped() {
+      return !this.isPlaying;
    }
 
    /**
@@ -109,55 +104,33 @@ public class AudioPlayer implements LineListener {
    }
 
    public void pause() {
+      this.audioClip.stop();
       this.isPaused = true;
    }
 
    /**
     * Play a given audio file.
-    *
-    * @throws IOException
-    * @throws UnsupportedAudioFileException
-    * @throws LineUnavailableException
     */
-   public void play() throws IOException {
-
+   public void play() {
       this.audioClip.start();
-
-      this.playCompleted = false;
-      this.isStopped = false;
-
-      while (!this.playCompleted) {
-         // wait for the playback completes
-         try {
-            Thread.sleep(1000);
-         } catch (InterruptedException ex) {
-            if (this.isStopped) {
-               this.audioClip.stop();
-               break;
-            }
-            if (this.isPaused) {
-               this.audioClip.stop();
-            } else {
-               this.audioClip.start();
-            }
-         }
-      }
-
-      this.audioClip.close();
+      this.isPlaying = true;
    }
 
    /**
     * Resume playing here.
     */
    public void resume() {
+      this.audioClip.start();
       this.isPaused = false;
    }
 
-   /**
+   /*
     * Stop playing back.
     */
    public void stop() {
-      this.isStopped = true;
+      this.audioClip.stop();
+      this.audioClip.close();
+      this.isPlaying = false;
    }
 
    /**
@@ -167,10 +140,7 @@ public class AudioPlayer implements LineListener {
    public void update(LineEvent event) {
       LineEvent.Type type = event.getType();
       if (type == LineEvent.Type.STOP) {
-         System.out.println("STOP EVENT");
-         if (this.isStopped || !this.isPaused) {
-            this.playCompleted = true;
-         }
+         System.out.println("AUDIOCLIP IS STOPPED!");
       }
    }
 }

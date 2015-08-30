@@ -1,6 +1,5 @@
 package hjsi.posthangeul.recorder;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,7 +12,6 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
-import javax.swing.JLabel;
 
 /**
  * A utility class provides general functions for recording sound.
@@ -22,11 +20,6 @@ import javax.swing.JLabel;
  *
  */
 public class SoundRecordingUtil implements Runnable {
-   /**
-    * 시간 표시에 사용할 포맷
-    */
-   private static final String timeFormat = "%02d:%02d:%02d";
-
    /**
     * 한 번에 읽어들일 버퍼 크기
     */
@@ -77,17 +70,9 @@ public class SoundRecordingUtil implements Runnable {
    private TargetDataLine audioLine;
 
    /**
-    * 시간을 표시할 외부 위젯
-    */
-   private JLabel timeIndicator;
-
-   /**
     * 녹음 유틸리티를 생성한다.
-    *
-    * @param indicator 시간을 표시하기 위한 외부 라벨 객체
     */
-   public SoundRecordingUtil(JLabel indicator) {
-      this.timeIndicator = indicator;
+   public SoundRecordingUtil() {
       this.format = SoundRecordingUtil.getAudioFormat();
       DataLine.Info info = new DataLine.Info(TargetDataLine.class, this.format);
 
@@ -103,12 +88,30 @@ public class SoundRecordingUtil implements Runnable {
    }
 
    /**
-    * 현재 일시중지 되어있는지 상태를 가져온다.
+    * 현재 녹음이 진행 된 시간을 초 단위로 가져온다.
     *
-    * @return 일시중지 중이라면 true, 녹음 중/재개 상태라면 false
+    * @return 녹음이 진행 된 시간 초 >= 0
+    */
+   public int getSecondPosition() {
+      return (int) (this.audioLine.getMicrosecondPosition() / 1_000_000L);
+   }
+
+   /**
+    * 현재 일시중지 되어있는지 확인한다.
+    *
+    * @return 일시중지 중이라면 true, 아니라면 false
     */
    public boolean isPaused() {
       return this.isPaused;
+   }
+
+   /**
+    * 일시정지 상태에 상관 없이 녹음 자체가 시작되었는지 확인한다.
+    *
+    * @return 녹음 중이라면 true, 아니면 false.
+    */
+   public boolean isRecording() {
+      return this.isRunning;
    }
 
    /**
@@ -162,26 +165,13 @@ public class SoundRecordingUtil implements Runnable {
          this.audioLine.open(this.format);
          this.audioLine.start();
 
-         Color fg = this.timeIndicator.getForeground();
-         Color bg = this.timeIndicator.getBackground();
-
          while (this.isRunning) {
-            while (this.isPaused) {
-               try {
-                  Thread.sleep(500);
-                  if (this.timeIndicator.getForeground() == bg)
-                     this.timeIndicator.setForeground(fg);
-                  else
-                     this.timeIndicator.setForeground(bg);
-               } catch (InterruptedException e) {
-                  e.printStackTrace();
-               }
+            if (this.isPaused) {
+               Thread.yield();
+            } else {
+               bytesRead = this.audioLine.read(buffer, 0, buffer.length);
+               this.recordBytes.write(buffer, 0, bytesRead);
             }
-            this.timeIndicator.setForeground(fg);
-
-            bytesRead = this.audioLine.read(buffer, 0, buffer.length);
-            this.recordBytes.write(buffer, 0, bytesRead);
-            this.updateTimeIndicator(this.audioLine.getMicrosecondPosition());
          }
 
          this.audioLine.stop();
@@ -196,23 +186,20 @@ public class SoundRecordingUtil implements Runnable {
    /**
     * Save recorded sound data into a .wav file format by <b>thread.</b>
     *
-    * @param wavFileName The file name to be saved. The name is exclusive extension.
+    * @param wavFile The file path to be saved.
     * @param binaries The sound binaries to be saved.
     */
-   public void save(String wavFileName, byte[] binaries) {
+   public void save(File wavFile, byte[] binaries) {
       Thread saveEmployee = new Thread(() -> {
          if (binaries != null) {
-            File path = new File("records");
-
-            if (!path.exists()) {
-               if (path.mkdir())
-                  System.out.println(path.toString() + " 디렉토리를 생성했습니다.");
+            if (!wavFile.getParentFile().exists()) {
+               if (wavFile.getParentFile().mkdir())
+                  System.out.println(wavFile.getParentFile().toString() + " 디렉토리를 생성했습니다.");
                else {
-                  System.out.println(path.toString() + " 디렉토리 생성에 실패했습니다.");
+                  System.out.println(wavFile.getParentFile().toString() + " 디렉토리 생성에 실패했습니다.");
                   System.exit(-1);
                }
             }
-            File wavFile = new File(path, wavFileName + ".wav");
             ByteArrayInputStream bais = new ByteArrayInputStream(binaries);
 
             AudioInputStream audioInputStream = null;
@@ -233,13 +220,6 @@ public class SoundRecordingUtil implements Runnable {
             }
          }
          System.out.println("File saved successfully!");
-         try {
-            Thread.sleep(1000);
-         } catch (Exception e) {
-            e.printStackTrace();
-         }
-         System.out.println("Recording is ready");
-         this.timeIndicator.setText("00:00:00");
       });
       saveEmployee.start();
    }
@@ -280,21 +260,5 @@ public class SoundRecordingUtil implements Runnable {
          e.printStackTrace();
       }
       return soundBinaries;
-   }
-
-   /**
-    * 주어진 시간으로 시간 표시창에 표시한다.
-    *
-    * @param microSec 갱신할 시간, 마이크로초 기준
-    */
-   public void updateTimeIndicator(long microSec) {
-      int milliSec = (int) (microSec / 1000L);
-      int sec = milliSec / 1000;
-      int min = sec / 60;
-      int hour = min / 60;
-      min %= 60;
-      sec %= 60;
-      milliSec /= 100;
-      this.timeIndicator.setText(String.format(timeFormat, hour, min, sec));
    }
 }
