@@ -1,4 +1,4 @@
-package hjsi.posthangeul.recorder;
+package hjsi.posthangeul.sound;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -93,7 +93,9 @@ public class SoundRecordingUtil implements Runnable {
     * @return 녹음이 진행 된 시간 초 >= 0
     */
    public int getSecondPosition() {
-      return (int) (this.audioLine.getMicrosecondPosition() / 1_000_000L);
+      if (this.audioLine != null)
+         return (int) (this.audioLine.getMicrosecondPosition() / 1_000_000L);
+      return 0;
    }
 
    /**
@@ -164,6 +166,7 @@ public class SoundRecordingUtil implements Runnable {
          this.audioLine = AudioSystem.getTargetDataLine(this.format);
          this.audioLine.open(this.format);
          this.audioLine.start();
+         this.isRunning = true;
 
          while (this.isRunning) {
             if (this.isPaused) {
@@ -188,8 +191,9 @@ public class SoundRecordingUtil implements Runnable {
     *
     * @param wavFile The file path to be saved.
     * @param binaries The sound binaries to be saved.
+    * @return 저장 작업을 수행하는 스레드를 반환한다.
     */
-   public void save(File wavFile, byte[] binaries) {
+   public Thread save(File wavFile, byte[] binaries) {
       Thread saveEmployee = new Thread(() -> {
          if (binaries != null) {
             if (!wavFile.getParentFile().exists()) {
@@ -222,13 +226,13 @@ public class SoundRecordingUtil implements Runnable {
          System.out.println("File saved successfully!");
       });
       saveEmployee.start();
+      return saveEmployee;
    }
 
    /**
     * Start recording sound.
     */
    public void startRecording() {
-      this.isRunning = true;
       this.workerThread = new Thread(this);
       this.workerThread.start();
    }

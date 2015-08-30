@@ -18,7 +18,7 @@ import hjsi.posthangeul.editor.HangeulAssembler;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.SwiftEditor;
 import hjsi.posthangeul.editor.VisibleCaretListener;
-import hjsi.posthangeul.window.soundpanel.PlayingPanel;
+import hjsi.posthangeul.sound.SoundPanel;
 import hjsi.posthangeul.editor.VisibleCaretListener;
 
 
@@ -41,8 +41,8 @@ public class PostHangeulApp {
    JFrame mainWindow;
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
-   JPanel player;
    SwiftEditor editor;
+   SoundPanel recordingPanel;
 
    /* config of app instance */
    File currentFile = new File("제목 없음.rtf");
@@ -62,8 +62,9 @@ public class PostHangeulApp {
       /* create menu */
       this.shortcuts = new Shortcut(this, 24);
       this.topMenu.add(this.shortcuts);
-      PostHangeulApp.this.player = new PlayingPanel(PostHangeulApp.this); // create player
-      PostHangeulApp.this.topMenu.add(PostHangeulApp.this.player);
+      JPanel reservedSpace = new JPanel();
+      this.recordingPanel = new SoundPanel(reservedSpace, 40);
+      PostHangeulApp.this.topMenu.add(reservedSpace);
       this.mainWindow.getContentPane().add(this.topMenu, BorderLayout.NORTH);
 
       /* add editor */
