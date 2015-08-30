@@ -110,6 +110,7 @@ public class PostHangeulApp {
       return this.mainWindow;
    }
 
+
    /**
     * @param currentFile the currentFile to set
     */

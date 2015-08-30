@@ -43,9 +43,8 @@ public class Helper extends JPanel implements KeyListener {
       isStart = true;
 
       try {
-         bi =
-               ImageIO.read(new File("resources", "close-icon.png")).getScaledInstance(20, 20,
-                     Image.SCALE_AREA_AVERAGING);
+         bi = ImageIO.read(new File("resources", "close-icon.png")).getScaledInstance(20, 20,
+               Image.SCALE_AREA_AVERAGING);
       } catch (IOException e1) {
          // TODO Auto-generated catch block
          e1.printStackTrace();
@@ -95,7 +94,7 @@ public class Helper extends JPanel implements KeyListener {
       else if (ke.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
          BackSpaceCount++;
          if (BackSpaceCount > 5) {
-            text.setText("Ctrl BackSpace로 전부 지우소!!");
+            text.setText("Shift BackSpace로 해당줄을 삭제하실수 있습니다.");
             refreshLocation();
             setVisible(true);
             BackSpaceCount = 0;
@@ -107,7 +106,7 @@ public class Helper extends JPanel implements KeyListener {
          lineCount++;
          System.out.println("linecount " + lineCount);
          if (lineCount > 3) {
-            text.setText("Ctrl L로 줄 이동을 하실수 있습니다");
+            text.setText("Ctrl L로 줄 이동을 하실수 있습니다.");
             refreshLocation();
             setVisible(true);
             lineCount = 0;
