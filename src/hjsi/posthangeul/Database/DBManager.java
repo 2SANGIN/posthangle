@@ -140,7 +140,7 @@ public class DBManager {
       if (this.open()) {
          /* SQL 작성 */
          StringBuffer sql = new StringBuffer();
-         sql.append("DELETE " + DB_TABLE_NAME + "\n");
+         sql.append("DELETE FROM " + DB_TABLE_NAME + "\n");
          sql.append("WHERE word = '" + word + "';");
 
          /* SQL state 준비 */

@@ -290,8 +290,9 @@ public class AutoComplete implements KeyListener, InputMethodListener {
          System.out.println("uncommitted is null! \n");
          this.initUncommittedBuffer();
          if (this.commBuf.length() == 0) {
-            this.initWordBuffers();
-            this.hideInputAssist();
+            if (this.isShowingInputAssist()) {
+               this.refreshInputAssist();
+            }
          } else {
             this.resizeWordBox();
          }
