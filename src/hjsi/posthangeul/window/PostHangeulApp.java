@@ -42,7 +42,7 @@ public class PostHangeulApp {
    KeyCodeViewer keyCodeViewer;
    Shortcut shortcuts;
    Recorder recorder;
-   Player player;
+   JPanel player;
 
    SwiftEditor editor;
    /* config of app instance */

@@ -1,5 +1,6 @@
 package hjsi.posthangeul.editor.autocomplete;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
@@ -31,7 +32,8 @@ public class WordManager {
    private final DBManager dbManager;
 
    {
-      this.dbManager = new DBManager(PostHangeulApp.appPath + "\\userdic.db");
+      File dbPath = new File(PostHangeulApp.appPath, "userdic.db");
+      this.dbManager = new DBManager(dbPath.toString());
 
       try {
          this.setWordCounter(this.dbManager.loadAllWords());
@@ -40,18 +42,6 @@ public class WordManager {
       }
       this.historyTop10 = new TreeMap<>();
       this.historyLast = new TreeMap<>();
-
-      // TODO test용
-      // this.countWord("안녕하세요");
-      // this.countWord("안녕못해");
-      // this.countWord("안녕이라고");
-      // this.countWord("제발말하지마");
-      // this.countWord("오빠차뽑았다");
-      // this.countWord("HelloWord");
-      // this.countWord("frozen");
-      // this.countWord("ohmygod");
-      // this.countWord("leagueoflegends");
-      // this.countWord("heroesofstorm");
    }
 
    public void addWordAsHistory(String inputWord, String selectedWord) {

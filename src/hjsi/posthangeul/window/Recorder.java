@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -31,17 +32,34 @@ public class Recorder extends JPanel {
    private static final long serialVersionUID = 1975693916367457094L;
 
    /**
+    * 시간표시용 포맷
+    */
+   private static final String TIME_FORMAT = "%02d:%02d:%02d";
+
+   /**
     * 녹음 시작, 중지 버튼
     */
    private JButton btnRecord;
+
    /**
     * 녹음 일시정지, 재개 버튼
     */
    private JButton btnResume;
 
-   private JLabel msg;
+   /**
+    * 녹음 상태를 표시창
+    */
+   private JLabel labelRecordStatus;
+
+   /**
+    * TODO 녹음 파일 용량 표시창
+    */
+   private JLabel labelRecordSize;
+
+   /**
+    * 현재 녹음 중인가에 대한 상태를 가진 변수
+    */
    private boolean isRecording = false;
-   private boolean isPlaying = false;
 
    /**
     * 실제 녹음을 진행하는 객체
@@ -67,7 +85,9 @@ public class Recorder extends JPanel {
       this.btnResume.setFont(new Font("Sans", Font.BOLD, 14));
       this.btnResume.setPreferredSize(preferredSize);
       this.btnResume.setEnabled(false);
-      this.msg = new JLabel("Recording is ready");
+      this.labelRecordStatus = new JLabel("Recording is ready");
+      // this.labelRecordStatus.setPreferredSize(new Dimension(200, btnSize));
+      this.labelRecordStatus.setBorder(BorderFactory.createLineBorder(new Color(200, 100, 100)));
 
       /* set image to each buttons */
       Image image = null;
@@ -80,15 +100,12 @@ public class Recorder extends JPanel {
          e2.printStackTrace();
       }
 
-      this.msg.setPreferredSize(new Dimension(200, btnSize));
-      this.msg.setBackground(this.getBackground());
-      this.msg.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
       this.add(this.btnRecord);
       this.add(this.btnResume);
-      this.add(this.msg);
+      this.add(this.labelRecordStatus);
 
-      this.recorder = new SoundRecordingUtil(this.msg);
+      this.recorder = new SoundRecordingUtil(this.labelRecordStatus);
 
       /* 녹음 시작/정지 버튼의 리스너를 등록한다 */
       this.btnRecord.addActionListener(e -> {
@@ -104,8 +121,10 @@ public class Recorder extends JPanel {
          /* 녹음 중지 */
          else if (Recorder.this.isRecording) {
             /* 재개 버튼 원상태로 돌리기 */
-            this.btnResume.setText("pause");
-            this.recorder.resumeRecording();
+            if (this.recorder.isPaused()) {
+               this.btnResume.setText("pause");
+               this.recorder.resumeRecording();
+            }
 
             Recorder.this.isRecording = false;
             Recorder.this.btnRecord.setText("Record");

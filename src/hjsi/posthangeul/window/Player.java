@@ -1,8 +1,8 @@
 package hjsi.posthangeul.window;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.filechooser.FileFilter;
 
+import hjsi.posthangeul.editor.autocomplete.AppFont;
 import hjsi.posthangeul.player.AudioPlayer;
 import hjsi.posthangeul.player.PlayingTimer;
 
@@ -50,83 +51,79 @@ public class Player extends JPanel implements ActionListener {
    private String lastOpenPath;
 
    private JLabel labelFileName = new JLabel("Playing File:");
-   private JLabel labelTimeCounter = new JLabel("00:00:00");
-   private JLabel labelDuration = new JLabel("00:00:00");
+   private JLabel labelTimeElapsed = new JLabel("00:00:00");
+   private JLabel labelTimeDuration = new JLabel("00:00:00");
 
    private JButton buttonOpen = new JButton("Open");
    private JButton buttonPlay = new JButton("Play");
    private JButton buttonPause = new JButton("Pause");
 
-   private JSlider sliderTime = new JSlider();
+   private JSlider sliderTimeProgress = new JSlider();
 
-   private Image image = null;
    private File fpPath = new File("resources");
 
    public Player(PostHangeulApp app) {
       this.setLayout(new GridBagLayout());
 
-      // setPreferredSize(new Dimension(app.getWindow().getWidth(), 100));
-
       GridBagConstraints constraints = new GridBagConstraints();
       constraints.insets = new Insets(5, 5, 5, 5);
       constraints.anchor = GridBagConstraints.LINE_START;
 
+      Image image = null;
+      ImageIcon iconOpen = null;
+      ImageIcon iconPlay = null;
+      ImageIcon iconPause = null;
+
       /* set icon */
       try {
-         this.image = ImageIO.read(new File(this.fpPath, "Open.png")).getScaledInstance(12, 12,
+         image = ImageIO.read(new File(this.fpPath, "Open.png")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         this.buttonOpen.setIcon(new ImageIcon(this.image));
+         iconOpen = new ImageIcon(image);
 
-         this.image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
+         image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         this.buttonPlay.setIcon(new ImageIcon(this.image));
+         iconPlay = new ImageIcon(image);
 
-         this.image = ImageIO.read(new File(this.fpPath, "Pause.png")).getScaledInstance(12, 12,
+         image = ImageIO.read(new File(this.fpPath, "Pause.png")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
-         this.buttonPause.setIcon(new ImageIcon(this.image));
+         iconPause = new ImageIcon(image);
       } catch (IOException e) {
          e.printStackTrace();
       }
 
-      this.buttonOpen.setFont(new Font("Sans", Font.BOLD, 14));
-      this.buttonPlay.setFont(new Font("Sans", Font.BOLD, 14));
+      this.buttonOpen.setIcon(iconOpen);
+      this.buttonOpen.setFont(AppFont.fontSans.deriveFont(14f));
+
+      this.buttonPlay.setIcon(iconPlay);
+      this.buttonPlay.setFont(AppFont.fontSans.deriveFont(14f));
       this.buttonPlay.setEnabled(false);
 
-      this.buttonPause.setFont(new Font("Sans", Font.BOLD, 14));
+      this.buttonPause.setIcon(iconPause);
+      this.buttonPause.setFont(AppFont.fontSans.deriveFont(14f));
       this.buttonPause.setEnabled(false);
 
-      this.labelTimeCounter.setFont(new Font("Sans", Font.BOLD, 12));
-      this.labelDuration.setFont(new Font("Sans", Font.BOLD, 12));
+      this.labelTimeElapsed.setFont(AppFont.fontSans.deriveFont(12f));
+      this.labelTimeDuration.setFont(AppFont.fontSans.deriveFont(12f));
 
-      this.sliderTime.setPreferredSize(new Dimension(400, 20));
-      this.sliderTime.setEnabled(false);
-      this.sliderTime.setValue(0);
+      this.sliderTimeProgress.setPreferredSize(new Dimension(400, 20));
+      this.sliderTimeProgress.setValue(0);
+      this.sliderTimeProgress.setEnabled(false);
 
-      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+      JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+      panelButtons.setBackground(Color.cyan);
       panelButtons.add(this.buttonOpen);
       panelButtons.add(this.buttonPlay);
       panelButtons.add(this.buttonPause);
 
-      constraints.gridwidth = 3;
-      constraints.gridx = 3;
-      this.add(panelButtons, constraints);
+      JPanel panelSlider = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+      panelSlider.setBackground(Color.darkGray);
+      panelSlider.add(this.labelTimeElapsed);
+      panelSlider.add(this.sliderTimeProgress);
+      panelSlider.add(this.labelTimeDuration);
 
-      constraints.gridx = 0;
-      constraints.gridy = 0;
-      constraints.gridwidth = 3;
-      this.add(this.labelFileName, constraints);
-
-      constraints.anchor = GridBagConstraints.CENTER;
-      constraints.gridy = 1;
-      constraints.gridwidth = 1;
-      this.add(this.labelTimeCounter, constraints);
-
-      constraints.gridx = 1;
-      this.add(this.sliderTime, constraints);
-
-      constraints.gridx = 2;
-      this.add(this.labelDuration, constraints);
-
+      this.add(panelButtons);
+      this.add(panelButtons);
+      this.add(this.labelFileName);
 
       this.buttonOpen.addActionListener(this);
       this.buttonPlay.addActionListener(this);
@@ -163,7 +160,7 @@ public class Player extends JPanel implements ActionListener {
       if (this.lastOpenPath != null && !this.lastOpenPath.equals("")) {
          fileChooser = new JFileChooser(this.lastOpenPath);
       } else {
-         fileChooser = new JFileChooser();
+         fileChooser = new JFileChooser(System.getProperty("user.dir") + "/records");
       }
 
       FileFilter wavFilter = new FileFilter() {
@@ -217,33 +214,35 @@ public class Player extends JPanel implements ActionListener {
     * Start playing back the sound.
     */
    private void playBack() {
-      this.timer = new PlayingTimer(this.labelTimeCounter, this.sliderTime);
+      this.timer = new PlayingTimer(this.labelTimeElapsed, this.sliderTimeProgress);
       this.timer.start();
       this.isPlaying = true;
+      Image image = null;
       try {
-         this.image = ImageIO.read(new File(this.fpPath, "Stop.gif")).getScaledInstance(12, 12,
+         image = ImageIO.read(new File(this.fpPath, "Stop.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
       } catch (IOException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
+
+      this.buttonPlay.setText("Stop");
+      this.buttonPlay.setIcon(new ImageIcon(image));
+      this.buttonPlay.setEnabled(true);
+
+      this.buttonPause.setText("Pause");
+      this.buttonPause.setEnabled(true);
 
       this.playbackThread = new Thread(() -> {
          try {
 
-            Player.this.buttonPlay.setText("Stop");
-            Player.this.buttonPlay.setIcon(new ImageIcon(Player.this.image));
-            Player.this.buttonPlay.setEnabled(true);
-
-            Player.this.buttonPause.setText("Pause");
-            Player.this.buttonPause.setEnabled(true);
 
             Player.this.player.load(Player.this.audioFilePath);
             Player.this.timer.setAudioClip(Player.this.player.getAudioClip());
             Player.this.labelFileName.setText("Playing File: " + Player.this.audioFilePath);
-            Player.this.sliderTime.setMaximum((int) Player.this.player.getClipSecondLength());
+            Player.this.sliderTimeProgress
+                  .setMaximum((int) Player.this.player.getClipSecondLength());
 
-            Player.this.labelDuration.setText(Player.this.player.getClipLengthString());
+            Player.this.labelTimeDuration.setText(Player.this.player.getClipLengthString());
             Player.this.player.play();
 
             Player.this.resetControls();
@@ -274,16 +273,16 @@ public class Player extends JPanel implements ActionListener {
    private void resetControls() {
       this.timer.reset();
       this.timer.interrupt();
+      Image image = null;
       try {
-         this.image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
+         image = ImageIO.read(new File(this.fpPath, "Play.gif")).getScaledInstance(12, 12,
                Image.SCALE_AREA_AVERAGING);
       } catch (IOException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
 
       this.buttonPlay.setText("Play");
-      this.buttonPlay.setIcon(new ImageIcon(this.image));
+      this.buttonPlay.setIcon(new ImageIcon(image));
 
       this.buttonPause.setEnabled(false);
 

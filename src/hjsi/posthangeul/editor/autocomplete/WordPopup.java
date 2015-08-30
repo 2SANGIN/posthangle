@@ -3,14 +3,11 @@ package hjsi.posthangeul.editor.autocomplete;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.Insets;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.File;
-import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -38,13 +35,7 @@ public class WordPopup extends JScrollPane {
    private static Font fontNanumGothic;
 
    static {
-      /* font 리소스 불러옴 */
-      File fp = new File("fonts/NanumGothic.ttf");
-      try {
-         fontNanumGothic = Font.createFont(Font.TRUETYPE_FONT, fp).deriveFont(Font.PLAIN, 16);
-      } catch (FontFormatException | IOException e) {
-         e.printStackTrace();
-      }
+      fontNanumGothic = AppFont.getButtonFont(16);
    }
 
    /**
@@ -336,18 +327,6 @@ public class WordPopup extends JScrollPane {
       JLabel word = new JLabel(text);
       word.setFont(fontNanumGothic);
       word.setForeground(this.normalFgColor);
-      // word.addMouseListener(new MouseAdapter() {
-      // @Override
-      // public void mouseEntered(MouseEvent e) {
-      // int y = ((JLabel) e.getSource()).getParent().getY();
-      // WordPopup.this.setHoverIndex((y / WordPopup.this.getRowHeight()));
-      // }
-      //
-      // @Override
-      // public void mouseExited(MouseEvent e) {
-      // WordPopup.this.clearHover();
-      // }
-      // });
       return word;
    }
 

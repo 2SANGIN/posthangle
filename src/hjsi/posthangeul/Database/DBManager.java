@@ -50,7 +50,6 @@ public class DBManager {
     *
     * @param databaseFileName DB관리 클래스가 관리할 DB 파일명
     */
-   @SuppressWarnings("resource")
    public DBManager(String databaseFileName) {
       this.dbFileName = databaseFileName;
 
